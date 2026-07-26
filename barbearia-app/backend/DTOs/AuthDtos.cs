@@ -29,6 +29,29 @@ public class RegistrarUsuarioDto
     public PapelUsuario Papel { get; set; } = PapelUsuario.Atendente;
 }
 
+public class RegistrarClienteDto
+{
+    [Required]
+    [StringLength(100)]
+    public string Nome { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(20)]
+    public string Telefone { get; set; } = string.Empty;
+
+    [EmailAddress(ErrorMessage = "E-mail inválido")]
+    [StringLength(150)]
+    public string? Email { get; set; }
+
+    [Required]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "O usuário deve ter ao menos 3 caracteres")]
+    public string Usuario { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "A senha deve ter ao menos 6 caracteres")]
+    public string Senha { get; set; } = string.Empty;
+}
+
 public class AuthResponseDto
 {
     public string Token { get; set; } = string.Empty;
@@ -37,4 +60,5 @@ public class AuthResponseDto
     public string Nome { get; set; } = string.Empty;
     public string Usuario { get; set; } = string.Empty;
     public string Papel { get; set; } = string.Empty;
+    public int? ClienteId { get; set; } // preenchido quando o usuário é um cliente
 }

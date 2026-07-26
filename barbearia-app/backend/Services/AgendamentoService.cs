@@ -8,13 +8,18 @@ namespace BarbeariaApi.Services;
 public class AgendamentoService
 {
     private readonly BarbeariaContext _context;
+    private readonly int _horaAbertura;
+    private readonly int _horaFechamento;
 
-    public AgendamentoService(BarbeariaContext context)
+    public AgendamentoService(BarbeariaContext context, IConfiguration config)
     {
         _context = context;
+        _horaAbertura = config.GetValue<int?>("Funcionamento:HoraAbertura") ?? 9;
+        _horaFechamento = config.GetValue<int?>("Funcionamento:HoraFechamento") ?? 18;
     }
 
-    public async Task<(bool Sucesso, string? Erro, AgendamentoResponseDto? Dados)> CriarAsync(CriarAgendamentoDto dto)
+    public async Task<(bool Sucesso, string? Erro, AgendamentoResponseDto? Dados)> CriarAsync(
+        CriarAgendamentoDto dto, StatusAgendamento statusInicial = StatusAgendamento.Agendado)
     {
         var servico = await _context.Servicos.FindAsync(dto.ServicoId);
         if (servico is null || !servico.Ativo)
@@ -39,7 +44,8 @@ public class AgendamentoService
         var agendamentosBarbeiro = await _context.Agendamentos
             .Include(a => a.Servico)
             .Where(a => a.BarbeiroId == dto.BarbeiroId
-                        && a.Status != StatusAgendamento.Cancelado)
+                        && a.Status != StatusAgendamento.Cancelado
+                        && a.Status != StatusAgendamento.Recusado)
             .ToListAsync();
 
         foreach (var existente in agendamentosBarbeiro)
@@ -60,7 +66,7 @@ public class AgendamentoService
             ServicoId = dto.ServicoId,
             Observacoes = dto.Observacoes,
             PrecoCobrado = servico.Preco,
-            Status = StatusAgendamento.Agendado
+            Status = statusInicial
         };
 
         _context.Agendamentos.Add(agendamento);
@@ -100,6 +106,77 @@ public class AgendamentoService
         agendamento.Status = status;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    // Lista os agendamentos de um cliente específico (histórico da área pública).
+    public async Task<List<AgendamentoResponseDto>> ListarPorClienteAsync(int clienteId)
+    {
+        var lista = await _context.Agendamentos
+            .Include(a => a.Cliente)
+            .Include(a => a.Barbeiro)
+            .Include(a => a.Servico)
+            .Where(a => a.ClienteId == clienteId)
+            .OrderByDescending(a => a.DataHora)
+            .ToListAsync();
+
+        return lista.Select(a => MapearResponse(a, a.Cliente!, a.Barbeiro!, a.Servico!)).ToList();
+    }
+
+    // Calcula os horários VAGOS de um barbeiro num dia, para um serviço de dada duração.
+    // Devolve apenas os horários livres — nunca expõe quem ocupa os horários cheios.
+    public async Task<(bool Sucesso, string? Erro, List<DateTime>? Horarios)> HorariosLivresAsync(
+        int barbeiroId, int servicoId, DateTime data)
+    {
+        var servico = await _context.Servicos.FindAsync(servicoId);
+        if (servico is null || !servico.Ativo)
+            return (false, "Serviço inválido.", null);
+
+        var barbeiro = await _context.Barbeiros.FindAsync(barbeiroId);
+        if (barbeiro is null || !barbeiro.Ativo)
+            return (false, "Barbeiro inválido.", null);
+
+        var duracao = servico.DuracaoMinutos;
+        var diaBase = data.Date;
+
+        // Janela de funcionamento do dia
+        var abertura = diaBase.AddHours(_horaAbertura);
+        var fechamento = diaBase.AddHours(_horaFechamento);
+
+        // Ocupações do barbeiro no dia (ignora cancelados/recusados).
+        // Buscamos só os campos necessários — nada de dados de cliente.
+        var ocupacoes = await _context.Agendamentos
+            .Include(a => a.Servico)
+            .Where(a => a.BarbeiroId == barbeiroId
+                        && a.Status != StatusAgendamento.Cancelado
+                        && a.Status != StatusAgendamento.Recusado
+                        && a.DataHora >= diaBase
+                        && a.DataHora < diaBase.AddDays(1))
+            .Select(a => new { a.DataHora, a.Servico!.DuracaoMinutos })
+            .ToListAsync();
+
+        var livres = new List<DateTime>();
+        var agora = DateTime.UtcNow;
+
+        // Gera candidatos em passos do tamanho da duração do serviço.
+        for (var inicio = abertura; inicio.AddMinutes(duracao) <= fechamento; inicio = inicio.AddMinutes(duracao))
+        {
+            var fim = inicio.AddMinutes(duracao);
+
+            // Não oferece horários no passado
+            if (inicio < agora) continue;
+
+            // Verifica se colide com alguma ocupação existente
+            var colide = ocupacoes.Any(o =>
+            {
+                var oInicio = o.DataHora;
+                var oFim = o.DataHora.AddMinutes(o.DuracaoMinutos);
+                return inicio < oFim && oInicio < fim; // regra de sobreposição
+            });
+
+            if (!colide) livres.Add(inicio);
+        }
+
+        return (true, null, livres);
     }
 
     private static AgendamentoResponseDto MapearResponse(Agendamento a, Cliente c, Barbeiro b, Servico s) => new()

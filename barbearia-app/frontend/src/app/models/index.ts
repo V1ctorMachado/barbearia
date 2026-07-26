@@ -23,7 +23,7 @@ export interface Cliente {
   dataCadastro?: string;
 }
 
-export type StatusAgendamento = 'Agendado' | 'Confirmado' | 'Concluido' | 'Cancelado';
+export type StatusAgendamento = 'Pendente' | 'Agendado' | 'Confirmado' | 'Concluido' | 'Cancelado' | 'Recusado';
 
 export interface Agendamento {
   id: number;

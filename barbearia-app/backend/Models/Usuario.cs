@@ -4,8 +4,9 @@ namespace BarbeariaApi.Models;
 
 public enum PapelUsuario
 {
-    Atendente = 0,
-    Administrador = 1
+    Cliente = 0,        // cliente final, agenda pela área pública
+    Atendente = 1,
+    Administrador = 2
 }
 
 public class Usuario
@@ -32,4 +33,10 @@ public class Usuario
     public bool Ativo { get; set; } = true;
 
     public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
+
+    // Vínculo com o registro de Cliente (preenchido apenas quando Papel = Cliente).
+    // Permite que a conta de login do cliente aponte para os dados que aparecem
+    // nos agendamentos (nome, telefone).
+    public int? ClienteId { get; set; }
+    public Cliente? Cliente { get; set; }
 }

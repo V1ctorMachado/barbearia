@@ -211,11 +211,13 @@ input[type="date"] { color-scheme: dark; }
 .card:hover { border-color: var(--brass-dim); }
 
 .faixa-status { width: 5px; background: var(--muted); }
+.status-pendente  .faixa-status { background: var(--brass); }
 .status-agendado  .faixa-status { background: var(--blue-pole); }
 .status-confirmado .faixa-status { background: var(--brass); }
 .status-concluido  .faixa-status { background: #4c7a4c; }
 .status-cancelado  .faixa-status { background: var(--red-pole); }
-.status-cancelado { opacity: .55; }
+.status-recusado   .faixa-status { background: var(--red-pole); }
+.status-cancelado, .status-recusado { opacity: .55; }
 
 .card-hora {
   display: flex;
@@ -256,19 +258,23 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .acoes { display: flex; gap: .3rem; margin-top: .2rem; }
+.acoes { flex-wrap: wrap; justify-content: flex-end; }
 .acoes button {
   background: var(--panel-2);
   border: 1px solid var(--line);
   color: var(--brass);
-  width: 30px; height: 30px;
+  min-width: 30px; height: 30px;
+  padding: 0 .55rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: .85rem;
+  font-size: .8rem;
   transition: background .15s;
 }
 .acoes button:hover { background: rgba(201,162,75,.15); }
 .acoes button.danger { color: var(--red-pole); }
 .acoes button.danger:hover { background: rgba(178,59,59,.15); }
+.acoes button.aprovar { color: #a7d3a7; border-color: #4c7a4c; }
+.acoes button.aprovar:hover { background: rgba(76,122,76,.18); }
 
 /* ── Alerta ─────────────────────────────────────────── */
 .alerta {

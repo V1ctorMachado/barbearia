@@ -18,10 +18,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(requisicao).pipe(
     catchError((erro: HttpErrorResponse) => {
-      // 401 = token inválido/expirado → desloga e manda pro login
+      // 401 = token inválido/expirado → desloga e manda pro login certo
       if (erro.status === 401 && !req.url.includes('/auth/login')) {
+        const eraCliente = auth.ehCliente();
         auth.logout();
-        router.navigate(['/login']);
+        router.navigate([eraCliente ? '/login-cliente' : '/login']);
       }
       return throwError(() => erro);
     })

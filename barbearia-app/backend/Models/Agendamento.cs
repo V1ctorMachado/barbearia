@@ -4,10 +4,12 @@ namespace BarbeariaApi.Models;
 
 public enum StatusAgendamento
 {
-    Agendado = 0,
-    Confirmado = 1,
-    Concluido = 2,
-    Cancelado = 3
+    Pendente = 0,    // criado pelo cliente, aguardando aprovação da barbearia
+    Agendado = 1,    // criado/aprovado pela barbearia
+    Confirmado = 2,
+    Concluido = 3,
+    Cancelado = 4,
+    Recusado = 5     // pedido do cliente recusado pela barbearia
 }
 
 public class Agendamento

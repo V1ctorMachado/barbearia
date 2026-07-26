@@ -1,0 +1,122 @@
+<div class="portal-shell">
+  <header class="topbar">
+    <div class="pole" aria-hidden="true"></div>
+    <div class="brand">
+      <h1>Navalha & Cia</h1>
+      <span class="tagline">Agende seu horário</span>
+    </div>
+    <div class="pole" aria-hidden="true"></div>
+    <div class="usuario-box" *ngIf="usuarioLogado() as u">
+      <span class="usuario-nome">{{ u.nome }}</span>
+      <button class="btn-sair" (click)="sair()">Sair</button>
+    </div>
+  </header>
+
+  <nav class="abas">
+    <button [class.ativa]="aba() === 'agendar'" (click)="aba.set('agendar')">Novo agendamento</button>
+    <button [class.ativa]="aba() === 'meus'" (click)="irParaMeus()">Meus agendamentos</button>
+  </nav>
+
+  <!-- ABA: NOVO AGENDAMENTO -->
+  <main *ngIf="aba() === 'agendar'" class="conteudo">
+    <div class="aviso-ok" *ngIf="sucesso()">{{ sucesso() }}</div>
+    <div class="alerta" *ngIf="erro()">{{ erro() }}</div>
+
+    <div class="passo">
+      <span class="passo-num">1</span>
+      <div class="passo-corpo">
+        <label>Escolha o barbeiro</label>
+        <div class="opcoes">
+          <button *ngFor="let b of barbeiros()"
+                  class="chip" [class.sel]="barbeiroId() === b.id"
+                  (click)="barbeiroId.set(b.id)">
+            {{ b.nome }}
+            <small *ngIf="b.especialidades">{{ b.especialidades }}</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="passo">
+      <span class="passo-num">2</span>
+      <div class="passo-corpo">
+        <label>Escolha o serviço</label>
+        <div class="opcoes">
+          <button *ngFor="let s of servicos()"
+                  class="chip" [class.sel]="servicoId() === s.id"
+                  (click)="servicoId.set(s.id)">
+            {{ s.nome }}
+            <small>{{ s.preco | currency:'BRL' }} · {{ s.duracaoMinutos }}min</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="passo">
+      <span class="passo-num">3</span>
+      <div class="passo-corpo">
+        <label>Escolha a data</label>
+        <div class="data-linha">
+          <input type="date" [value]="data()" (change)="data.set($any($event.target).value)" />
+          <button class="btn-buscar" (click)="buscarHorarios()" [disabled]="!podeBuscar() || buscando()">
+            {{ buscando() ? 'Buscando…' : 'Ver horários' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="passo" *ngIf="horarios().length > 0 || (buscando() === false && horarioEscolhido() === null && horarios().length === 0 && podeBuscar())">
+      <span class="passo-num">4</span>
+      <div class="passo-corpo">
+        <label>Horários disponíveis</label>
+
+        <div class="horarios" *ngIf="horarios().length > 0">
+          <button *ngFor="let h of horarios()"
+                  class="hora-chip" [class.sel]="horarioEscolhido() === h"
+                  (click)="escolherHorario(h)">
+            {{ formatarHora(h) }}
+          </button>
+        </div>
+
+        <p class="vazio-inline" *ngIf="horarios().length === 0 && !buscando()">
+          Nenhum horário livre para essa combinação. Tente outra data ou barbeiro.
+        </p>
+      </div>
+    </div>
+
+    <div class="confirmar-box" *ngIf="horarioEscolhido()">
+      <div class="resumo">
+        <strong>{{ servicoSel()?.nome }}</strong> às {{ formatarHora(horarioEscolhido()!) }}
+        <span class="resumo-preco">{{ servicoSel()?.preco | currency:'BRL' }}</span>
+      </div>
+      <textarea rows="2" [(ngModel)]="observacoes"
+                placeholder="Observações (opcional) — ex.: máquina 2 nas laterais"></textarea>
+      <button class="btn-confirmar" (click)="confirmarAgendamento()" [disabled]="enviando()">
+        {{ enviando() ? 'Enviando…' : 'Confirmar agendamento' }}
+      </button>
+    </div>
+  </main>
+
+  <!-- ABA: MEUS AGENDAMENTOS -->
+  <main *ngIf="aba() === 'meus'" class="conteudo">
+    <div class="alerta" *ngIf="erro()">{{ erro() }}</div>
+
+    <p class="vazio" *ngIf="meus().length === 0">Você ainda não tem agendamentos.</p>
+
+    <article *ngFor="let ag of meus()" class="meu-card" [class]="classeStatus(ag.status)">
+      <div class="faixa" aria-hidden="true"></div>
+      <div class="meu-info">
+        <span class="meu-data">{{ formatarDataHora(ag.dataHora) }}</span>
+        <strong>{{ ag.servicoNome }}</strong>
+        <span class="meu-barbeiro">com {{ ag.barbeiroNome }}</span>
+      </div>
+      <div class="meu-lado">
+        <span class="meu-status">{{ rotuloStatus(ag.status) }}</span>
+        <span class="meu-preco">{{ ag.precoCobrado | currency:'BRL' }}</span>
+        <button class="btn-cancelar" *ngIf="podeCancelar(ag.status)" (click)="cancelar(ag)">
+          Cancelar
+        </button>
+      </div>
+    </article>
+  </main>
+</div>

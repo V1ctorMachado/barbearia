@@ -9,6 +9,15 @@ export interface AuthResponse {
   nome: string;
   usuario: string;
   papel: string;
+  clienteId?: number | null;
+}
+
+export interface RegistrarCliente {
+  nome: string;
+  telefone: string;
+  email?: string;
+  usuario: string;
+  senha: string;
 }
 
 const CHAVE_STORAGE = 'barbearia_auth';
@@ -28,11 +37,23 @@ export class AuthService {
     return new Date(s.expiraEm) > new Date();
   });
   ehAdmin = computed(() => this.sessao()?.papel === 'Administrador');
+  ehCliente = computed(() => this.sessao()?.papel === 'Cliente');
+  // Staff = quem opera o painel interno (atendente ou admin)
+  ehStaff = computed(() => {
+    const p = this.sessao()?.papel;
+    return p === 'Atendente' || p === 'Administrador';
+  });
 
   constructor(private http: HttpClient) {}
 
   login(usuario: string, senha: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, { usuario, senha }).pipe(
+      tap(resp => this.salvarSessao(resp))
+    );
+  }
+
+  registrarCliente(dados: RegistrarCliente): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/registrar-cliente`, dados).pipe(
       tap(resp => this.salvarSessao(resp))
     );
   }

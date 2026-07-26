@@ -29,6 +29,20 @@ public class AuthController : ControllerBase
         return Ok(dados);
     }
 
+    // Registro público: qualquer pessoa pode criar uma conta de cliente.
+    [HttpPost("registrar-cliente")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RegistrarCliente([FromBody] RegistrarClienteDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var (sucesso, erro, dados) = await _auth.RegistrarClienteAsync(dto);
+        if (!sucesso)
+            return BadRequest(new { mensagem = erro });
+
+        return Ok(dados);
+    }
+
     // Apenas administradores podem cadastrar novos usuários.
     [HttpPost("registrar")]
     [Authorize(Roles = "Administrador")]

@@ -75,11 +75,15 @@
         <span class="badge">{{ ag.status }}</span>
 
         <div class="acoes">
+          <button *ngIf="ag.status === 'Pendente'"
+                  class="aprovar" (click)="mudarStatus(ag, 'Agendado')" title="Aprovar pedido">Aprovar</button>
+          <button *ngIf="ag.status === 'Pendente'"
+                  class="danger" (click)="mudarStatus(ag, 'Recusado')" title="Recusar pedido">Recusar</button>
           <button *ngIf="ag.status === 'Agendado'"
                   (click)="mudarStatus(ag, 'Confirmado')" title="Confirmar">✓</button>
           <button *ngIf="ag.status === 'Confirmado'"
                   (click)="mudarStatus(ag, 'Concluido')" title="Concluir">✓✓</button>
-          <button *ngIf="ag.status !== 'Cancelado' && ag.status !== 'Concluido'"
+          <button *ngIf="ag.status !== 'Cancelado' && ag.status !== 'Concluido' && ag.status !== 'Recusado' && ag.status !== 'Pendente'"
                   class="danger" (click)="mudarStatus(ag, 'Cancelado')" title="Cancelar">✕</button>
         </div>
       </div>

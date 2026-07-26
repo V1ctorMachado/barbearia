@@ -48,3 +48,21 @@ public class AtualizarStatusDto
     [Required]
     public StatusAgendamento Status { get; set; }
 }
+
+// Agendamento feito pelo cliente na área pública.
+// Não tem ClienteId: o backend usa o id do token, para o cliente não
+// conseguir agendar em nome de outra pessoa.
+public class AgendarClienteDto
+{
+    [Required]
+    public DateTime DataHora { get; set; }
+
+    [Required]
+    public int BarbeiroId { get; set; }
+
+    [Required]
+    public int ServicoId { get; set; }
+
+    [StringLength(500)]
+    public string? Observacoes { get; set; }
+}
