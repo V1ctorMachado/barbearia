@@ -1,0 +1,169 @@
+<div class="app-shell">
+  <!-- Header com listras de poste de barbeiro -->
+  <header class="topbar">
+    <div class="pole" aria-hidden="true"></div>
+    <div class="brand">
+      <h1>Navalha & Cia</h1>
+      <span class="tagline">Sistema de Agendamentos</span>
+    </div>
+    <div class="pole" aria-hidden="true"></div>
+
+    <div class="usuario-box" *ngIf="usuarioLogado() as u">
+      <span class="usuario-nome">{{ u.nome }}</span>
+      <span class="usuario-papel">{{ u.papel }}</span>
+      <button class="btn-sair" (click)="sair()" title="Sair">Sair</button>
+    </div>
+  </header>
+
+  <!-- Barra de controles -->
+  <section class="controls">
+    <div class="control-group">
+      <label for="data">Data</label>
+      <input id="data" type="date" [value]="dataSelecionada()"
+             (change)="onDataChange($any($event.target).value)" />
+    </div>
+
+    <div class="control-group">
+      <label for="barbeiro">Barbeiro</label>
+      <select id="barbeiro" [ngModel]="filtroBarbeiro()"
+              (ngModelChange)="filtroBarbeiro.set($event)">
+        <option [ngValue]="null">Todos</option>
+        <option *ngFor="let b of barbeiros()" [ngValue]="b.id">{{ b.nome }}</option>
+      </select>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="faturamento">
+      <span class="fat-label">Faturamento do dia</span>
+      <span class="fat-valor">{{ faturamentoDia() | currency:'BRL':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <button class="btn-primary" (click)="abrirForm()">+ Novo agendamento</button>
+  </section>
+
+  <!-- Erro global -->
+  <div class="alerta" *ngIf="erro() && !mostrarForm()">{{ erro() }}</div>
+
+  <!-- Lista de agendamentos -->
+  <main class="lista">
+    <div class="carregando" *ngIf="carregando()">Carregando…</div>
+
+    <div class="vazio" *ngIf="!carregando() && agendamentosFiltrados().length === 0">
+      <p>Nenhum agendamento para esta data.</p>
+      <button class="btn-ghost" (click)="abrirForm()">Agendar o primeiro horário</button>
+    </div>
+
+    <article *ngFor="let ag of agendamentosFiltrados()"
+             class="card" [class]="classeStatus(ag.status)">
+      <div class="faixa-status" aria-hidden="true"></div>
+
+      <div class="card-hora">
+        <span class="hora">{{ formatarHora(ag.dataHora) }}</span>
+        <span class="duracao">{{ ag.duracaoMinutos }}min</span>
+      </div>
+
+      <div class="card-info">
+        <h3>{{ ag.clienteNome }}</h3>
+        <p class="servico">{{ ag.servicoNome }} · {{ ag.barbeiroNome }}</p>
+        <p class="obs" *ngIf="ag.observacoes">{{ ag.observacoes }}</p>
+        <span class="telefone">{{ ag.clienteTelefone }}</span>
+      </div>
+
+      <div class="card-lado">
+        <span class="preco">{{ ag.precoCobrado | currency:'BRL':'symbol':'1.2-2' }}</span>
+        <span class="badge">{{ ag.status }}</span>
+
+        <div class="acoes">
+          <button *ngIf="ag.status === 'Agendado'"
+                  (click)="mudarStatus(ag, 'Confirmado')" title="Confirmar">✓</button>
+          <button *ngIf="ag.status === 'Confirmado'"
+                  (click)="mudarStatus(ag, 'Concluido')" title="Concluir">✓✓</button>
+          <button *ngIf="ag.status !== 'Cancelado' && ag.status !== 'Concluido'"
+                  class="danger" (click)="mudarStatus(ag, 'Cancelado')" title="Cancelar">✕</button>
+        </div>
+      </div>
+    </article>
+  </main>
+</div>
+
+<!-- Modal de novo agendamento -->
+<div class="overlay" *ngIf="mostrarForm()" (click)="fecharForm()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h2>Novo agendamento</h2>
+      <button class="fechar" (click)="fecharForm()">✕</button>
+    </div>
+
+    <div class="alerta" *ngIf="erro()">{{ erro() }}</div>
+
+    <div class="form-grid">
+      <!-- Cliente -->
+      <div class="campo campo-full">
+        <label>Cliente</label>
+        <div class="cliente-row" *ngIf="!criandoCliente()">
+          <select [(ngModel)]="form.clienteId">
+            <option [ngValue]="null">Selecione…</option>
+            <option *ngFor="let c of clientes()" [ngValue]="c.id">
+              {{ c.nome }} — {{ c.telefone }}
+            </option>
+          </select>
+          <button class="btn-ghost small" (click)="criandoCliente.set(true)">+ Novo</button>
+        </div>
+
+        <div class="novo-cliente" *ngIf="criandoCliente()">
+          <input placeholder="Nome" [(ngModel)]="novoCliente.nome" />
+          <input placeholder="Telefone" [(ngModel)]="novoCliente.telefone" />
+          <input placeholder="E-mail (opcional)" [(ngModel)]="novoCliente.email" />
+          <div class="mini-acoes">
+            <button class="btn-primary small" (click)="criarClienteRapido()">Salvar</button>
+            <button class="btn-ghost small" (click)="criandoCliente.set(false)">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barbeiro -->
+      <div class="campo">
+        <label>Barbeiro</label>
+        <select [(ngModel)]="form.barbeiroId">
+          <option [ngValue]="null">Selecione…</option>
+          <option *ngFor="let b of barbeiros()" [ngValue]="b.id">{{ b.nome }}</option>
+        </select>
+      </div>
+
+      <!-- Serviço -->
+      <div class="campo">
+        <label>Serviço</label>
+        <select [(ngModel)]="form.servicoId">
+          <option [ngValue]="null">Selecione…</option>
+          <option *ngFor="let s of servicos()" [ngValue]="s.id">
+            {{ s.nome }} — {{ s.preco | currency:'BRL' }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Data e hora -->
+      <div class="campo campo-full">
+        <label>Data e hora</label>
+        <input type="datetime-local" [(ngModel)]="form.dataHora" />
+        <small *ngIf="servicoSelecionado()">
+          Duração estimada: {{ servicoSelecionado()?.duracaoMinutos }} minutos
+        </small>
+      </div>
+
+      <!-- Observações -->
+      <div class="campo campo-full">
+        <label>Observações</label>
+        <textarea rows="2" [(ngModel)]="form.observacoes"
+                  placeholder="Ex.: cliente prefere máquina 2"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="fecharForm()">Cancelar</button>
+      <button class="btn-primary" (click)="salvarAgendamento()" [disabled]="carregando()">
+        {{ carregando() ? 'Salvando…' : 'Confirmar agendamento' }}
+      </button>
+    </div>
+  </div>
+</div>
