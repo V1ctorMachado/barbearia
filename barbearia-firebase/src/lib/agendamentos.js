@@ -1,6 +1,6 @@
 import {
   collection, addDoc, updateDoc, doc, query, where, getDocs,
-  orderBy, Timestamp, serverTimestamp,
+  Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { servicoPorId, FUNCIONAMENTO } from './dados';
@@ -39,13 +39,16 @@ function mapear(d) {
 
 // Agendamentos de um cliente (a área "Meus agendamentos").
 export async function listarPorCliente(clienteUid) {
+  // Sem orderBy na consulta (evita exigir índice composto no Firestore).
+  // A ordenação por data é feita aqui embaixo, no navegador.
   const q = query(
     collection(db, COL),
     where('clienteUid', '==', clienteUid),
-    orderBy('dataHora', 'desc'),
   );
   const snap = await getDocs(q);
-  return snap.docs.map(mapear);
+  return snap.docs
+    .map(mapear)
+    .sort((a, b) => b.dataHora - a.dataHora); // mais recentes primeiro
 }
 
 // Agendamentos de um dia (painel da equipe). Opcionalmente filtra por barbeiro.
@@ -53,15 +56,25 @@ export async function listarPorDia(data, barbeiroId = null) {
   const inicio = new Date(data); inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio);  fim.setDate(fim.getDate() + 1);
 
-  const restricoes = [
-    where('dataHora', '>=', Timestamp.fromDate(inicio)),
-    where('dataHora', '<', Timestamp.fromDate(fim)),
-    orderBy('dataHora', 'asc'),
-  ];
-  if (barbeiroId) restricoes.unshift(where('barbeiroId', '==', barbeiroId));
+  // Para nunca exigir índice composto no Firestore, a consulta usa no máximo
+  // UM critério. Se há barbeiro, filtramos por ele no banco; senão, filtramos
+  // pelo intervalo de datas. O restante do filtro (a "peneira" fina) acontece
+  // aqui no navegador, sobre os resultados.
+  let snap;
+  if (barbeiroId) {
+    snap = await getDocs(query(collection(db, COL), where('barbeiroId', '==', barbeiroId)));
+  } else {
+    snap = await getDocs(query(
+      collection(db, COL),
+      where('dataHora', '>=', Timestamp.fromDate(inicio)),
+      where('dataHora', '<', Timestamp.fromDate(fim)),
+    ));
+  }
 
-  const snap = await getDocs(query(collection(db, COL), ...restricoes));
-  return snap.docs.map(mapear);
+  return snap.docs
+    .map(mapear)
+    .filter((a) => a.dataHora >= inicio && a.dataHora < fim) // garante o dia certo
+    .sort((a, b) => a.dataHora - b.dataHora);
 }
 
 export async function atualizarStatus(id, status) {
