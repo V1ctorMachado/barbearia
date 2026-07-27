@@ -3,7 +3,7 @@ import {
   Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { servicoPorId, FUNCIONAMENTO } from './dados';
+import { servicoPorId, periodosDoDia } from './dados';
 
 const COL = 'agendamentos';
 
@@ -82,17 +82,19 @@ export async function atualizarStatus(id, status) {
 }
 
 // ── Cálculo de horários livres ───────────────────────────────
-// Fatia o dia (9h–18h) em blocos do tamanho da duração do serviço e
-// remove os que colidem com agendamentos existentes do barbeiro.
-// Devolve só os horários vagos — nunca os dados de quem ocupou os cheios.
+// Usa os PERÍODOS de funcionamento do dia da semana (manhã e tarde,
+// com intervalo de almoço nos dias de semana). Em cada período, fatia
+// em blocos do tamanho do serviço e remove os que colidem com
+// agendamentos existentes. Devolve só os horários vagos.
 export async function horariosLivres(barbeiroId, servicoId, data) {
   const servico = servicoPorId(servicoId);
   if (!servico) return [];
   const duracao = servico.duracaoMin;
 
+  const periodos = periodosDoDia(data);
+  if (periodos.length === 0) return []; // fechado nesse dia
+
   const diaBase = new Date(data); diaBase.setHours(0, 0, 0, 0);
-  const abertura = new Date(diaBase); abertura.setHours(FUNCIONAMENTO.abertura, 0, 0, 0);
-  const fechamento = new Date(diaBase); fechamento.setHours(FUNCIONAMENTO.fechamento, 0, 0, 0);
 
   // Busca ocupações do barbeiro nesse dia (ignora cancelados/recusados).
   const ocupados = (await listarPorDia(diaBase, barbeiroId))
@@ -102,12 +104,18 @@ export async function horariosLivres(barbeiroId, servicoId, data) {
   const agora = new Date();
   const livres = [];
 
-  for (let ini = new Date(abertura); ini.getTime() + duracao * 60000 <= fechamento.getTime(); ini = new Date(ini.getTime() + duracao * 60000)) {
-    const fim = new Date(ini.getTime() + duracao * 60000);
-    if (ini < agora) continue; // não oferece horário no passado
+  // Percorre cada período (manhã, tarde) gerando os horários possíveis.
+  for (const p of periodos) {
+    const abertura = new Date(diaBase.getTime() + p.abre * 60000);
+    const ultimoInicio = new Date(diaBase.getTime() + p.fecha * 60000); // último início permitido
 
-    const colide = ocupados.some((o) => ini < o.fim && o.inicio < fim);
-    if (!colide) livres.push(new Date(ini));
+    for (let ini = new Date(abertura); ini.getTime() <= ultimoInicio.getTime(); ini = new Date(ini.getTime() + duracao * 60000)) {
+      const fim = new Date(ini.getTime() + duracao * 60000);
+      if (ini < agora) continue; // não oferece horário no passado
+
+      const colide = ocupados.some((o) => ini < o.fim && o.inicio < fim);
+      if (!colide) livres.push(new Date(ini));
+    }
   }
   return livres;
 }

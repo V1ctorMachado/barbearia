@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId } from '../lib/dados';
+import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
 import './Portal.css';
 
@@ -187,7 +187,11 @@ export default function Portal() {
                     ))}
                   </div>
                 ) : (
-                  <p className="vazio-inline">Nenhum horário livre para essa combinação. Tente outra data ou barbeiro.</p>
+                  <p className="vazio-inline">
+                    {abreNoDia(data)
+                      ? 'Nenhum horário livre nessa data. Tente outro dia.'
+                      : 'A barbearia não abre nesse dia (funciona de terça a sábado). Escolha outra data.'}
+                  </p>
                 )}
               </div>
             </div>
