@@ -1,0 +1,100 @@
+.painel-shell { max-width: 920px; margin: 0 auto; padding: 0 1rem 4rem; }
+
+.topbar {
+  display: flex; align-items: stretch; gap: 1.25rem;
+  padding: 1.75rem 0 1.5rem; border-bottom: 1px solid var(--line); position: relative;
+}
+.brand { flex: 1; text-align: center; align-self: center; }
+.brand h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+.tagline {
+  display: block; font-size: .72rem; letter-spacing: .35em;
+  text-transform: uppercase; color: var(--muted); margin-top: .3rem;
+}
+.usuario-box {
+  position: absolute; top: .9rem; right: 0;
+  display: flex; align-items: center; gap: .6rem; font-size: .8rem; max-width: 55%;
+}
+.usuario-nome {
+  color: var(--cream); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.btn-sair {
+  background: transparent; border: 1px solid var(--brass-dim); color: var(--brass);
+  padding: .35rem .7rem; border-radius: 4px; font-size: .8rem; cursor: pointer; flex-shrink: 0;
+}
+.btn-sair:hover { background: rgba(201,162,75,.12); }
+
+.controls {
+  display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0;
+}
+.control-group { display: flex; flex-direction: column; gap: .35rem; }
+.control-group label {
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+}
+.spacer { flex: 1; }
+.faturamento {
+  display: flex; flex-direction: column; align-items: flex-end;
+  padding: .3rem .9rem; border-left: 2px solid var(--brass-dim);
+}
+.fat-label { font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.fat-valor { font-family: 'Oswald', sans-serif; font-size: 1.35rem; color: var(--brass); }
+
+.lista { display: flex; flex-direction: column; gap: .75rem; margin-top: .5rem; }
+.carregando, .vazio { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+
+.card { display: flex; align-items: stretch; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.faixa-status { width: 5px; background: var(--muted); }
+.st-pendente .faixa-status { background: var(--brass); }
+.st-agendado .faixa-status { background: var(--blue-pole); }
+.st-confirmado .faixa-status { background: var(--green); }
+.st-concluido .faixa-status { background: var(--green); }
+.st-cancelado .faixa-status, .st-recusado .faixa-status { background: var(--red-pole); }
+.st-cancelado, .st-recusado { opacity: .55; }
+
+.card-hora {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 1rem 1.1rem; border-right: 1px solid var(--line); min-width: 84px;
+}
+.hora { font-family: 'Oswald', sans-serif; font-size: 1.5rem; color: var(--cream); }
+.duracao { font-size: .7rem; color: var(--muted); }
+
+.card-info { flex: 1; padding: .9rem 1.1rem; display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.card-info h3 { font-size: 1.05rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.servico { color: var(--brass); font-size: .88rem; }
+.obs { color: var(--muted); font-size: .82rem; font-style: italic; }
+
+.card-lado {
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+  gap: .4rem; padding: .9rem 1.1rem; border-left: 1px solid var(--line);
+}
+.preco { font-family: 'Oswald', sans-serif; font-size: 1.15rem; color: var(--cream); }
+.badge {
+  font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  padding: .18rem .5rem; border-radius: 3px; border: 1px solid var(--line);
+  color: var(--muted); text-align: center;
+}
+.acoes { display: flex; gap: .3rem; margin-top: .2rem; flex-wrap: wrap; justify-content: flex-end; }
+.acoes button {
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--brass);
+  min-width: 30px; height: 30px; padding: 0 .55rem; border-radius: 4px;
+  cursor: pointer; font-size: .8rem; font-family: inherit; transition: background .15s;
+}
+.acoes button:hover { background: rgba(201,162,75,.15); }
+.acoes button.danger { color: var(--red-pole); }
+.acoes button.danger:hover { background: rgba(178,59,59,.15); }
+.acoes button.aprovar { color: #a7d3a7; border-color: var(--green); }
+.acoes button.aprovar:hover { background: rgba(76,122,76,.18); }
+
+@media (max-width: 620px) {
+  .usuario-box { position: static; width: 100%; max-width: 100%; justify-content: center; order: -1; margin-bottom: .5rem; }
+  .topbar { flex-wrap: wrap; }
+  .controls { flex-direction: column; align-items: stretch; }
+  .control-group input, .control-group select { width: 100%; min-height: 44px; }
+  .spacer { display: none; }
+  .faturamento { border-left: none; border-top: 1px solid var(--line);
+    flex-direction: row; align-items: center; justify-content: space-between; width: 100%; padding: .5rem 0; }
+  .card { flex-wrap: wrap; }
+  .card-lado { border-left: none; border-top: 1px solid var(--line); width: 100%;
+    flex-direction: row; justify-content: space-between; align-items: center; }
+}

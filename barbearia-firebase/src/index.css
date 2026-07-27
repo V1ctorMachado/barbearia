@@ -1,0 +1,127 @@
+:root {
+  --ink: #1a1512;
+  --panel: #242019;
+  --panel-2: #2d2820;
+  --brass: #c9a24b;
+  --brass-dim: #8f7333;
+  --cream: #f2e8d5;
+  --muted: #9a8f78;
+  --red-pole: #b23b3b;
+  --blue-pole: #2f5d8a;
+  --green: #4c7a4c;
+  --line: #3a3226;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--ink);
+  color: var(--cream);
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
+}
+
+#root {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* No celular, campos com fonte < 16px fazem o iOS dar zoom ao focar. */
+@media (max-width: 768px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+a { color: var(--brass); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Poste de barbeiro (elemento de assinatura) ─────────── */
+.pole {
+  width: 12px; border-radius: 6px;
+  background: repeating-linear-gradient(45deg,
+    var(--red-pole) 0 10px, #f2e8d5 10px 20px, var(--blue-pole) 20px 30px);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.3);
+}
+.poles-mini { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.2rem; }
+.pole-mini {
+  width: 44px; height: 8px; border-radius: 4px;
+  background: repeating-linear-gradient(45deg,
+    var(--red-pole) 0 8px, #f2e8d5 8px 16px, var(--blue-pole) 16px 24px);
+}
+
+/* ── Tipografia de marca ─────────────────────────────────── */
+.marca {
+  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--brass); margin: 0;
+}
+
+/* ── Botões ──────────────────────────────────────────────── */
+.btn {
+  background: var(--brass); color: #1a1512; border: none;
+  padding: .75rem 1.1rem; border-radius: 5px; font-weight: 600;
+  font-size: .95rem; letter-spacing: .03em; cursor: pointer;
+  font-family: inherit; transition: background .15s, transform .1s;
+}
+.btn:hover:not(:disabled) { background: #dbb662; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-bloco { width: 100%; min-height: 46px; }
+
+.btn-ghost {
+  background: transparent; color: var(--brass);
+  border: 1px solid var(--brass-dim); padding: .6rem 1rem;
+  border-radius: 5px; cursor: pointer; font-family: inherit; font-size: .9rem;
+  transition: background .15s;
+}
+.btn-ghost:hover { background: rgba(201,162,75,.12); }
+
+/* ── Campos ──────────────────────────────────────────────── */
+.campo { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .9rem; text-align: left; }
+.campo label {
+  font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+}
+input, select, textarea {
+  background: var(--ink); border: 1px solid var(--line); color: var(--cream);
+  padding: .65rem .75rem; border-radius: 5px; font-size: .95rem; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--brass); border-color: var(--brass);
+}
+input[type="date"], input[type="datetime-local"] { color-scheme: dark; }
+
+/* ── Avisos ──────────────────────────────────────────────── */
+.alerta {
+  background: rgba(178,59,59,.12); border: 1px solid var(--red-pole); color: #e8a0a0;
+  padding: .65rem .8rem; border-radius: 5px; font-size: .85rem; margin-bottom: 1rem; text-align: left;
+}
+.aviso-ok {
+  background: rgba(76,122,76,.15); border: 1px solid var(--green); color: #a7d3a7;
+  padding: .65rem .8rem; border-radius: 5px; font-size: .85rem; margin-bottom: 1rem; text-align: left;
+}
+
+/* ── Cartão centrado (login/cadastro) ────────────────────── */
+.tela-centro {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 30%, #221c16 0%, #1a1512 70%); padding: 1.5rem;
+}
+.cartao {
+  width: 100%; max-width: 400px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 2.2rem 2rem 1.8rem; text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55);
+}
+.cartao h1 { font-size: 1.9rem; }
+.cartao .sub {
+  font-size: .72rem; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--muted); margin: .4rem 0 1.6rem;
+}
+.cartao .rodape { margin-top: 1.3rem; font-size: .8rem; color: var(--muted); }
+
+.carregando-tela {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
