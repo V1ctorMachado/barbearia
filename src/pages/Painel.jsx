@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { STATUS_LABEL } from '../lib/dados';
-import { listarPorDia, atualizarStatus } from '../lib/agendamentos';
-import { hojeISO } from '../lib/datas';
+import { listarPorDia, listarTodos, atualizarStatus } from '../lib/agendamentos';
 import './Painel.css';
 
 const fmtHora = (d) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const fmtDataCurta = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 // Opções do filtro de clientes (por situação do agendamento).
@@ -21,7 +21,7 @@ const FILTROS = [
 export default function Painel() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState(hojeISO());
+  const [data, setData] = useState(''); // vazio = todos os dias
   const [filtro, setFiltro] = useState('ativos'); // padrão: os que precisam de atenção
   const [ags, setAgs] = useState([]);
   const [carregando, setCarregando] = useState(false);
@@ -30,7 +30,8 @@ export default function Painel() {
   async function carregar() {
     setCarregando(true); setErro('');
     try {
-      const lista = await listarPorDia(data); // data como string; a função corrige o fuso
+      // Sem data escolhida → todos os dias. Com data → só aquele dia.
+      const lista = data ? await listarPorDia(data) : await listarTodos();
       setAgs(lista);
     } catch {
       setErro('Não foi possível carregar a agenda.');
@@ -82,8 +83,15 @@ export default function Painel() {
 
       <section className="controls">
         <div className="control-group">
-          <label>Data</label>
-          <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+          <label>Data {data ? '' : '(todos os dias)'}</label>
+          <div className="data-linha-painel">
+            <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+            {data && (
+              <button className="btn-limpar-data" onClick={() => setData('')} title="Ver todos os dias">
+                ×
+              </button>
+            )}
+          </div>
         </div>
         <div className="control-group">
           <label>Clientes</label>
@@ -93,7 +101,7 @@ export default function Painel() {
         </div>
         <div className="spacer" />
         <div className="faturamento">
-          <span className="fat-label">Faturamento do dia</span>
+          <span className="fat-label">{data ? 'Faturamento do dia' : 'Faturamento total'}</span>
           <span className="fat-valor">{brl(faturamento)}</span>
         </div>
       </section>
@@ -103,13 +111,16 @@ export default function Painel() {
       <main className="lista">
         {carregando && <div className="carregando">Carregando…</div>}
         {!carregando && visiveis.length === 0 && (
-          <div className="vazio">Nenhum cliente nessa situação para esta data.</div>
+          <div className="vazio">
+            {data ? 'Nenhum cliente nessa situação para esta data.' : 'Nenhum cliente nessa situação.'}
+          </div>
         )}
 
         {visiveis.map((ag) => (
           <article key={ag.id} className={`card st-${ag.status}`}>
             <div className="faixa-status" />
             <div className="card-hora">
+              <span className="card-data">{fmtDataCurta(ag.dataHora)}</span>
               <span className="hora">{fmtHora(ag.dataHora)}</span>
               <span className="duracao">{ag.duracaoMin}min</span>
             </div>

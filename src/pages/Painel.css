@@ -98,3 +98,19 @@
   .card-lado { border-left: none; border-top: 1px solid var(--line); width: 100%;
     flex-direction: row; justify-content: space-between; align-items: center; }
 }
+
+/* Data no card (quando vendo vários dias) */
+.card-data {
+  font-size: .7rem; letter-spacing: .05em; color: var(--brass-dim);
+  font-family: 'Oswald', sans-serif; margin-bottom: .1rem;
+}
+
+/* Linha da data com botão de limpar no painel */
+.data-linha-painel { display: flex; gap: .4rem; align-items: center; }
+.data-linha-painel input { flex: 1; }
+.btn-limpar-data {
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--brass);
+  width: 38px; height: 38px; border-radius: 5px; cursor: pointer;
+  font-size: 1.1rem; line-height: 1; flex-shrink: 0; transition: background .15s;
+}
+.btn-limpar-data:hover { background: rgba(201,162,75,.15); }

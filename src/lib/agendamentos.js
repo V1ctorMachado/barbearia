@@ -80,6 +80,15 @@ export async function listarPorDia(data, barbeiroId = null) {
     .sort((a, b) => a.dataHora - b.dataHora);
 }
 
+// Lista TODOS os agendamentos (todos os dias), para o painel da equipe
+// quando nenhuma data está filtrada. Ordena do mais próximo ao mais distante.
+export async function listarTodos() {
+  const snap = await getDocs(query(collection(db, COL)));
+  return snap.docs
+    .map(mapear)
+    .sort((a, b) => a.dataHora - b.dataHora); // data crescente
+}
+
 export async function atualizarStatus(id, status) {
   await updateDoc(doc(db, COL, id), { status });
 }
