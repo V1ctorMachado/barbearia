@@ -1,26 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { traduzErroAuth } from '../lib/erros';
 
 export default function LoginStaff() {
-  const { entrar } = useAuth();
+  const { entrar, usuario, ehStaff, carregando } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
-  const [carregando, setCarregando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [tentouEntrar, setTentouEntrar] = useState(false);
+
+  // Só decide para onde ir DEPOIS que a verificação de equipe terminou.
+  // Isso evita a "corrida" em que o site redirecionava antes de saber
+  // se o usuário é staff (o que jogava a equipe para o portal do cliente).
+  useEffect(() => {
+    if (!tentouEntrar || carregando) return; // espera a checagem terminar
+    if (usuario && ehStaff) {
+      navigate('/painel');          // é da equipe → painel
+    } else if (usuario && !ehStaff) {
+      setErro('Esta conta não tem acesso de equipe.');
+      setEnviando(false);
+    }
+  }, [tentouEntrar, carregando, usuario, ehStaff, navigate]);
 
   async function enviar(e) {
     e.preventDefault();
     setErro('');
-    setCarregando(true);
+    setEnviando(true);
     try {
       await entrar(email, senha);
-      navigate('/painel');
+      setTentouEntrar(true); // dispara o useEffect acima quando a checagem terminar
     } catch (err) {
       setErro(traduzErroAuth(err.code));
-      setCarregando(false);
+      setEnviando(false);
     }
   }
 
@@ -44,8 +58,8 @@ export default function LoginStaff() {
                  autoComplete="current-password" placeholder="sua senha" />
         </div>
 
-        <button className="btn btn-bloco" type="submit" disabled={carregando}>
-          {carregando ? 'Entrando…' : 'Entrar'}
+        <button className="btn btn-bloco" type="submit" disabled={enviando}>
+          {enviando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
     </div>
