@@ -1,6 +1,8 @@
 // Dados fixos da barbearia. Como serviços e barbeiro mudam pouco,
 // ficam aqui em vez de no banco — simples de editar e não precisa de tela de admin.
 
+import { dataLocalDeISO } from './datas';
+
 export const SERVICOS = [
   { id: 'corte',        nome: 'Corte',                preco: 30, duracaoMin: 30, descricao: 'Corte de cabelo' },
   { id: 'barba',        nome: 'Barba',                preco: 25, duracaoMin: 20, descricao: 'Aparar e modelar a barba' },
@@ -49,7 +51,9 @@ export const FUNCIONAMENTO_SEMANA = {
 
 // Devolve a lista de períodos de uma data (lista vazia se fechado).
 export function periodosDoDia(data) {
-  const diaSemana = new Date(data).getDay();
+  // Aceita tanto string "YYYY-MM-DD" quanto objeto Date.
+  const d = typeof data === 'string' ? dataLocalDeISO(data) : new Date(data);
+  const diaSemana = d.getDay();
   return FUNCIONAMENTO_SEMANA[diaSemana] ?? [];
 }
 

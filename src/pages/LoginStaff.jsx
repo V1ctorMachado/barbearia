@@ -42,7 +42,7 @@ export default function LoginStaff() {
     <div className="tela-centro">
       <form className="cartao" onSubmit={enviar}>
         <div className="poles-mini"><span className="pole-mini" /><span className="pole-mini" /></div>
-        <h1 className="marca">Navalha &amp; Cia</h1>
+        <h1 className="marca">Barbearia Mageschi</h1>
         <p className="sub">Acesso da equipe</p>
 
         {erro && <div className="alerta">{erro}</div>}

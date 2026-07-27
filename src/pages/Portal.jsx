@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
+import { hojeISO } from '../lib/datas';
 import './Portal.css';
 
-const hojeIso = () => new Date().toISOString().split('T')[0];
+const hojeIso = hojeISO; // usa a versão à prova de fuso
 const fmtHora = (d) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const fmtDataHora = (d) => d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -21,7 +22,6 @@ export default function Portal() {
   const [data, setData] = useState(hojeIso());
   const [horarios, setHorarios] = useState([]);
   const [horarioSel, setHorarioSel] = useState(null);
-  const [observacoes, setObservacoes] = useState('');
   const [buscou, setBuscou] = useState(false);
 
   const [buscando, setBuscando] = useState(false);
@@ -64,10 +64,9 @@ export default function Portal() {
         barbeiroId,
         servicoId,
         dataHora: horarioSel,
-        observacoes,
       });
       setSucesso('Pedido enviado! Ele fica pendente até a barbearia confirmar.');
-      setHorarios([]); setHorarioSel(null); setObservacoes(''); setBuscou(false);
+      setHorarios([]); setHorarioSel(null); setBuscou(false);
     } catch {
       setErro('Não foi possível agendar. O horário pode ter sido ocupado.');
     } finally {
@@ -104,7 +103,7 @@ export default function Portal() {
       <header className="topbar">
         <div className="pole" />
         <div className="brand">
-          <h1 className="marca">Navalha &amp; Cia</h1>
+          <h1 className="marca">Barbearia Mageschi</h1>
           <span className="tagline">Agende seu horário</span>
         </div>
         <div className="pole" />
@@ -203,8 +202,6 @@ export default function Portal() {
                 <strong>{servico?.nome}</strong> às {fmtHora(horarioSel)}
                 <span className="resumo-preco">{brl(servico?.preco || 0)}</span>
               </div>
-              <textarea rows="2" value={observacoes} onChange={(e) => setObservacoes(e.target.value)}
-                        placeholder="Observações (opcional) — ex.: máquina 2 nas laterais" />
               <button className="btn btn-bloco" onClick={confirmar} disabled={enviando}>
                 {enviando ? 'Enviando…' : 'Confirmar agendamento'}
               </button>

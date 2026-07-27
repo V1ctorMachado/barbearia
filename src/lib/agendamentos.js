@@ -4,6 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { servicoPorId, periodosDoDia } from './dados';
+import { dataLocalDeISO } from './datas';
 
 const COL = 'agendamentos';
 
@@ -53,7 +54,9 @@ export async function listarPorCliente(clienteUid) {
 
 // Agendamentos de um dia (painel da equipe). Opcionalmente filtra por barbeiro.
 export async function listarPorDia(data, barbeiroId = null) {
-  const inicio = new Date(data); inicio.setHours(0, 0, 0, 0);
+  // Aceita string "YYYY-MM-DD" (do painel) ou Date. Meia-noite LOCAL.
+  const inicio = typeof data === 'string' ? dataLocalDeISO(data) : new Date(data);
+  inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio);  fim.setDate(fim.getDate() + 1);
 
   // Para nunca exigir índice composto no Firestore, a consulta usa no máximo
@@ -94,7 +97,10 @@ export async function horariosLivres(barbeiroId, servicoId, data) {
   const periodos = periodosDoDia(data);
   if (periodos.length === 0) return []; // fechado nesse dia
 
-  const diaBase = new Date(data); diaBase.setHours(0, 0, 0, 0);
+  // Base do dia à meia-noite LOCAL (evita o bug de fuso que puxava
+  // a data para o dia anterior).
+  const diaBase = typeof data === 'string' ? dataLocalDeISO(data) : new Date(data);
+  diaBase.setHours(0, 0, 0, 0);
 
   // Busca ocupações do barbeiro nesse dia (ignora cancelados/recusados).
   const ocupados = (await listarPorDia(diaBase, barbeiroId))

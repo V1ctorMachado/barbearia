@@ -1,19 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BARBEIROS, STATUS_LABEL, barbeiroPorId } from '../lib/dados';
+import { STATUS_LABEL } from '../lib/dados';
 import { listarPorDia, atualizarStatus } from '../lib/agendamentos';
+import { hojeISO } from '../lib/datas';
 import './Painel.css';
 
-const hojeIso = () => new Date().toISOString().split('T')[0];
 const fmtHora = (d) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+// Opções do filtro de clientes (por situação do agendamento).
+const FILTROS = [
+  { id: 'ativos',     label: 'Aguardando, agendados e confirmados', status: ['pendente', 'agendado', 'confirmado'] },
+  { id: 'pendente',   label: 'Só aguardando confirmação',           status: ['pendente'] },
+  { id: 'agendado',   label: 'Só agendados',                         status: ['agendado'] },
+  { id: 'confirmado', label: 'Só confirmados',                       status: ['confirmado'] },
+  { id: 'todos',      label: 'Todos (inclui concluídos/cancelados)', status: null },
+];
 
 export default function Painel() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState(hojeIso());
-  const [filtroBarbeiro, setFiltroBarbeiro] = useState('');
+  const [data, setData] = useState(hojeISO());
+  const [filtro, setFiltro] = useState('ativos'); // padrão: os que precisam de atenção
   const [ags, setAgs] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
@@ -21,7 +30,7 @@ export default function Painel() {
   async function carregar() {
     setCarregando(true); setErro('');
     try {
-      const lista = await listarPorDia(new Date(data), filtroBarbeiro || null);
+      const lista = await listarPorDia(data); // data como string; a função corrige o fuso
       setAgs(lista);
     } catch {
       setErro('Não foi possível carregar a agenda.');
@@ -30,7 +39,7 @@ export default function Painel() {
     }
   }
 
-  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [data, filtroBarbeiro]);
+  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [data]);
 
   async function mudar(id, status) {
     try {
@@ -46,7 +55,13 @@ export default function Painel() {
     navigate('/staff');
   }
 
-  const faturamento = ags
+  // Aplica o filtro de situação escolhido.
+  const filtroAtual = FILTROS.find((f) => f.id === filtro) ?? FILTROS[0];
+  const visiveis = filtroAtual.status
+    ? ags.filter((a) => filtroAtual.status.includes(a.status))
+    : ags;
+
+  const faturamento = visiveis
     .filter((a) => !['cancelado', 'recusado'].includes(a.status))
     .reduce((s, a) => s + (a.preco || 0), 0);
 
@@ -55,8 +70,8 @@ export default function Painel() {
       <header className="topbar">
         <div className="pole" />
         <div className="brand">
-          <h1 className="marca">Navalha &amp; Cia</h1>
-          <span className="tagline">Painel da equipe</span>
+          <h1 className="marca">Barbearia Mageschi</h1>
+          <span className="tagline">Painel</span>
         </div>
         <div className="pole" />
         <div className="usuario-box">
@@ -71,10 +86,9 @@ export default function Painel() {
           <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
         </div>
         <div className="control-group">
-          <label>Barbeiro</label>
-          <select value={filtroBarbeiro} onChange={(e) => setFiltroBarbeiro(e.target.value)}>
-            <option value="">Todos</option>
-            {BARBEIROS.map((b) => <option key={b.id} value={b.id}>{b.nome}</option>)}
+          <label>Clientes</label>
+          <select value={filtro} onChange={(e) => setFiltro(e.target.value)}>
+            {FILTROS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
         </div>
         <div className="spacer" />
@@ -88,11 +102,11 @@ export default function Painel() {
 
       <main className="lista">
         {carregando && <div className="carregando">Carregando…</div>}
-        {!carregando && ags.length === 0 && (
-          <div className="vazio">Nenhum agendamento para esta data.</div>
+        {!carregando && visiveis.length === 0 && (
+          <div className="vazio">Nenhum cliente nessa situação para esta data.</div>
         )}
 
-        {ags.map((ag) => (
+        {visiveis.map((ag) => (
           <article key={ag.id} className={`card st-${ag.status}`}>
             <div className="faixa-status" />
             <div className="card-hora">
@@ -101,8 +115,7 @@ export default function Painel() {
             </div>
             <div className="card-info">
               <h3>{ag.clienteEmail}</h3>
-              <p className="servico">{ag.servicoNome} · {barbeiroPorId(ag.barbeiroId)?.nome || ag.barbeiroId}</p>
-              {ag.observacoes && <p className="obs">{ag.observacoes}</p>}
+              <p className="servico">{ag.servicoNome}</p>
             </div>
             <div className="card-lado">
               <span className="preco">{brl(ag.preco)}</span>
