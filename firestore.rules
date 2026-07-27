@@ -1,0 +1,74 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────
+//  REGRAS DE SEGURANÇA DEFINITIVAS (corrigidas)
+//
+//  Por que a versão anterior travava: no Firestore, "regras não são
+//  filtros". Se a regra de LEITURA olha o conteúdo do documento
+//  (ex.: clienteUid == meu uid), o Firestore rejeita a consulta
+//  inteira sempre que ela PODERIA tocar um documento de outra pessoa
+//  — e a busca de horários precisa ver os horários de todos os
+//  clientes daquele barbeiro. Por isso a leitura trava.
+//
+//  Solução: a LEITURA de agendamentos é liberada para qualquer
+//  usuário logado (a tela nunca mostra dados pessoais de outro
+//  cliente — só usa os horários ocupados para calcular vagas).
+//  A proteção forte fica nas ESCRITAS, onde a checagem de "equipe"
+//  via get() funciona bem (é operação de documento único).
+// ─────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null;
+    }
+
+    // É da equipe se existe roles/{meu uid} com staff == true.
+    // (Usado só em escrita — em documento único, não trava.)
+    function ehStaff() {
+      return logado()
+        && exists(/databases/$(database)/documents/roles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.staff == true;
+    }
+
+    // ── Agendamentos ──────────────────────────────────────────
+    match /agendamentos/{id} {
+      // Ler: qualquer logado (necessário para calcular horários sem travar).
+      allow read: if logado();
+
+      // Criar: só em nome de si mesmo e sempre como "pendente".
+      allow create: if logado()
+        && request.resource.data.clienteUid == request.auth.uid
+        && request.resource.data.status == 'pendente';
+
+      // Atualizar: a equipe pode tudo (aprovar/recusar/concluir);
+      // o cliente dono só pode CANCELAR o próprio agendamento.
+      allow update: if ehStaff()
+        || (
+          logado()
+          && resource.data.clienteUid == request.auth.uid
+          && request.resource.data.status == 'cancelado'
+        );
+
+      // Apagar: só a equipe (mantém histórico para o cliente).
+      allow delete: if ehStaff();
+    }
+
+    // ── Perfis de cliente ─────────────────────────────────────
+    match /clientes/{uid} {
+      // Cada cliente só lê e escreve o próprio perfil; a equipe lê todos.
+      allow read: if logado() && (uid == request.auth.uid || ehStaff());
+      allow create, update: if logado() && uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ── Marcação de equipe ────────────────────────────────────
+    // O app só LÊ para saber se você é staff. Quem define é você,
+    // manualmente, no Console (nunca pelo app).
+    match /roles/{uid} {
+      allow read: if logado() && uid == request.auth.uid;
+      allow write: if false;
+    }
+  }
+}
