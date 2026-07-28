@@ -48,9 +48,8 @@ export default function Portal() {
       setHorarios(livres);
       setBuscou(true);
     } catch (e) {
-      // TEMPORÁRIO (diagnóstico): mostra o erro real na tela e no console.
-      console.error('ERRO ao buscar horários:', e);
-      setErro('ERRO: ' + (e?.message || String(e)));
+      console.error('Erro ao buscar horários:', e); // fica no console, discreto
+      setErro('Não foi possível buscar os horários. Tente de novo.');
     } finally {
       setBuscando(false);
     }
