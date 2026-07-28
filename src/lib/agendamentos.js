@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { servicoPorId, periodosDoDia } from './dados';
-import { dataLocalDeISO } from './datas';
+import { dataLocalDeISO, ehDataPassada } from './datas';
 
 const COL = 'agendamentos';       // gaveta PRIVADA: dados completos (email etc.)
 const COL_PUB = 'ocupacoes';      // gaveta PÚBLICA: só horário/duração/status
@@ -13,7 +13,7 @@ const COL_PUB = 'ocupacoes';      // gaveta PÚBLICA: só horário/duração/sta
 //  - 'agendamentos' (privada): tudo, inclusive email — só dono e equipe leem.
 //  - 'ocupacoes'   (pública): só o necessário para calcular horários livres,
 //                             sem nenhum dado pessoal.
-export async function criarAgendamento({ clienteUid, clienteEmail, barbeiroId, servicoId, dataHora }) {
+export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, barbeiroId, servicoId, dataHora }) {
   const servico = servicoPorId(servicoId);
   if (!servico) throw new Error('Serviço inválido.');
 
@@ -25,6 +25,7 @@ export async function criarAgendamento({ clienteUid, clienteEmail, barbeiroId, s
   await setDoc(ref, {
     clienteUid,
     clienteEmail,
+    clienteNome: clienteNome || '',
     barbeiroId,
     servicoId,
     servicoNome: servico.nome,
@@ -121,12 +122,22 @@ export async function atualizarStatus(id, status) {
 // Lê as OCUPAÇÕES (gaveta pública) de um barbeiro num dia. Não traz
 // nenhum dado pessoal — só horário e duração. É o que o cálculo de
 // horários usa, para não precisar ler os dados privados dos clientes.
+// Corre uma promessa contra um tempo limite. Se estourar, rejeita —
+// assim a busca nunca fica "pendurada" para sempre.
+function comTimeout(promessa, ms = 10000) {
+  return Promise.race([
+    promessa,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo esgotado ao consultar o servidor.')), ms)),
+  ]);
+}
+
 async function ocupacoesDoDia(barbeiroId, dataDate) {
   const inicio = new Date(dataDate); inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio); fim.setDate(fim.getDate() + 1);
 
   // Uma só condição na consulta (por barbeiro) para não exigir índice composto.
-  const snap = await getDocs(query(collection(db, COL_PUB), where('barbeiroId', '==', barbeiroId)));
+  // Com timeout: se o servidor não responder em 10s, dá erro em vez de travar.
+  const snap = await comTimeout(getDocs(query(collection(db, COL_PUB), where('barbeiroId', '==', barbeiroId))));
   return snap.docs
     .map((d) => {
       const x = d.data();
@@ -148,6 +159,10 @@ export async function horariosLivres(barbeiroId, servicoId, data) {
   const servico = servicoPorId(servicoId);
   if (!servico) return [];
   const duracao = servico.duracaoMin;
+
+  // Data no passado: não há o que buscar. Retorna vazio na hora, sem
+  // consultar o banco (evita qualquer risco de a busca ficar pendurada).
+  if (ehDataPassada(data)) return [];
 
   const periodos = periodosDoDia(data);
   if (periodos.length === 0) return []; // fechado nesse dia

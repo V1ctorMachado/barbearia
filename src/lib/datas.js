@@ -25,3 +25,12 @@ export function hojeISO() {
   const dia = String(d.getDate()).padStart(2, '0');
   return `${ano}-${mes}-${dia}`;
 }
+
+// True se a data (string "YYYY-MM-DD" ou Date) é anterior a hoje.
+export function ehDataPassada(data) {
+  const d = typeof data === 'string' ? dataLocalDeISO(data) : new Date(data);
+  d.setHours(0, 0, 0, 0);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  return d < hoje;
+}

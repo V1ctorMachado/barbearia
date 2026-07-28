@@ -125,7 +125,8 @@ export default function Painel() {
               <span className="duracao">{ag.duracaoMin}min</span>
             </div>
             <div className="card-info">
-              <h3>{ag.clienteEmail}</h3>
+              <h3>{ag.clienteNome || ag.clienteEmail}</h3>
+              {ag.clienteNome && <p className="cliente-email">{ag.clienteEmail}</p>}
               <p className="servico">{ag.servicoNome}</p>
             </div>
             <div className="card-lado">

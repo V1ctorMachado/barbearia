@@ -114,3 +114,6 @@
   font-size: 1.1rem; line-height: 1; flex-shrink: 0; transition: background .15s;
 }
 .btn-limpar-data:hover { background: rgba(201,162,75,.15); }
+
+/* Email de apoio abaixo do nome do cliente */
+.cliente-email { font-size: .78rem; color: var(--muted); }

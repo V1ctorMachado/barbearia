@@ -8,6 +8,7 @@ import { traduzErroAuth } from '../lib/erros';
 export default function Cadastro() {
   const { cadastrar } = useAuth();
   const navigate = useNavigate();
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [senha, setSenha] = useState('');
@@ -19,14 +20,16 @@ export default function Cadastro() {
     e.preventDefault();
     setErro('');
 
+    if (!nome.trim()) { setErro('Informe seu nome.'); return; }
     if (senha.length < 6) { setErro('A senha deve ter ao menos 6 caracteres.'); return; }
     if (senha !== confirmar) { setErro('As senhas não conferem.'); return; }
 
     setCarregando(true);
     try {
       const cred = await cadastrar(email, senha);
-      // Guarda o perfil do cliente (o telefone que aparece no painel da equipe).
+      // Guarda o perfil do cliente (nome e telefone aparecem no painel da equipe).
       await setDoc(doc(db, 'clientes', cred.user.uid), {
+        nome: nome.trim(),
         email,
         telefone,
         criadoEm: new Date(),
@@ -47,6 +50,11 @@ export default function Cadastro() {
 
         {erro && <div className="alerta">{erro}</div>}
 
+        <div className="campo">
+          <label>Nome</label>
+          <input type="text" value={nome} onChange={(e) => setNome(e.target.value)}
+                 autoComplete="name" placeholder="seu nome" />
+        </div>
         <div className="campo">
           <label>E-mail</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}

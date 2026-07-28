@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
-import { hojeISO } from '../lib/datas';
+import { hojeISO, ehDataPassada } from '../lib/datas';
 import './Portal.css';
 
 const hojeIso = hojeISO; // usa a versão à prova de fuso
@@ -15,6 +17,15 @@ export default function Portal() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
   const [aba, setAba] = useState('agendar');
+  const [clienteNome, setClienteNome] = useState('');
+
+  // Carrega o nome do perfil do cliente (para gravar no agendamento).
+  useEffect(() => {
+    if (!usuario) return;
+    getDoc(doc(db, 'clientes', usuario.uid))
+      .then((snap) => { if (snap.exists()) setClienteNome(snap.data().nome || ''); })
+      .catch(() => { /* sem perfil/nome — segue com email */ });
+  }, [usuario]);
 
   // Fluxo de agendamento
   const [barbeiroId, setBarbeiroId] = useState(null);
@@ -62,6 +73,7 @@ export default function Portal() {
       await criarAgendamento({
         clienteUid: usuario.uid,
         clienteEmail: usuario.email,
+        clienteNome,
         barbeiroId,
         servicoId,
         dataHora: horarioSel,
@@ -188,9 +200,11 @@ export default function Portal() {
                   </div>
                 ) : (
                   <p className="vazio-inline">
-                    {abreNoDia(data)
-                      ? 'Nenhum horário livre nessa data. Tente outro dia.'
-                      : 'A barbearia não abre nesse dia (funciona de terça a sábado). Escolha outra data.'}
+                    {ehDataPassada(data)
+                      ? 'Essa data já passou. Escolha uma data a partir de hoje.'
+                      : abreNoDia(data)
+                        ? 'Nenhum horário livre nessa data. Tente outro dia.'
+                        : 'A barbearia não abre nesse dia (funciona de terça a sábado). Escolha outra data.'}
                   </p>
                 )}
               </div>
