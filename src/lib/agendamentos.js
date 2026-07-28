@@ -1,19 +1,28 @@
 import {
-  collection, addDoc, updateDoc, doc, query, where, getDocs,
+  collection, updateDoc, doc, setDoc, query, where, getDocs,
   Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { servicoPorId, periodosDoDia } from './dados';
 import { dataLocalDeISO } from './datas';
 
-const COL = 'agendamentos';
+const COL = 'agendamentos';       // gaveta PRIVADA: dados completos (email etc.)
+const COL_PUB = 'ocupacoes';      // gaveta PÚBLICA: só horário/duração/status
 
-// Cria um agendamento (sempre entra como "pendente", aguardando a equipe aprovar).
-export async function criarAgendamento({ clienteUid, clienteEmail, barbeiroId, servicoId, dataHora, observacoes }) {
+// Cria um agendamento. Escreve em DUAS coleções com o MESMO id:
+//  - 'agendamentos' (privada): tudo, inclusive email — só dono e equipe leem.
+//  - 'ocupacoes'   (pública): só o necessário para calcular horários livres,
+//                             sem nenhum dado pessoal.
+export async function criarAgendamento({ clienteUid, clienteEmail, barbeiroId, servicoId, dataHora }) {
   const servico = servicoPorId(servicoId);
   if (!servico) throw new Error('Serviço inválido.');
 
-  return addDoc(collection(db, COL), {
+  const ts = Timestamp.fromDate(new Date(dataHora));
+  const ref = doc(collection(db, COL));   // gera um id novo, usado nas duas gavetas
+  const id = ref.id;
+
+  // Gaveta privada — dados completos.
+  await setDoc(ref, {
     clienteUid,
     clienteEmail,
     barbeiroId,
@@ -21,11 +30,20 @@ export async function criarAgendamento({ clienteUid, clienteEmail, barbeiroId, s
     servicoNome: servico.nome,
     duracaoMin: servico.duracaoMin,
     preco: servico.preco,
-    dataHora: Timestamp.fromDate(new Date(dataHora)),
+    dataHora: ts,
     status: 'pendente',
-    observacoes: observacoes || '',
     criadoEm: serverTimestamp(),
   });
+
+  // Gaveta pública — só o que o cálculo de horários precisa. Sem email/nome.
+  await setDoc(doc(db, COL_PUB, id), {
+    barbeiroId,
+    dataHora: ts,
+    duracaoMin: servico.duracaoMin,
+    status: 'pendente',
+  });
+
+  return ref;
 }
 
 // Converte um documento do Firestore num objeto simples de usar na tela.
@@ -89,8 +107,36 @@ export async function listarTodos() {
     .sort((a, b) => a.dataHora - b.dataHora); // data crescente
 }
 
+// Atualiza o status nas DUAS gavetas (privada e pública), para não
+// dessincronizar. Se o agendamento foi cancelado/recusado, ele deixa de
+// contar como horário ocupado.
 export async function atualizarStatus(id, status) {
   await updateDoc(doc(db, COL, id), { status });
+  // A gaveta pública pode não existir para dados muito antigos; ignora erro.
+  try {
+    await updateDoc(doc(db, COL_PUB, id), { status });
+  } catch { /* documento público ausente (agendamento antigo) — sem problema */ }
+}
+
+// Lê as OCUPAÇÕES (gaveta pública) de um barbeiro num dia. Não traz
+// nenhum dado pessoal — só horário e duração. É o que o cálculo de
+// horários usa, para não precisar ler os dados privados dos clientes.
+async function ocupacoesDoDia(barbeiroId, dataDate) {
+  const inicio = new Date(dataDate); inicio.setHours(0, 0, 0, 0);
+  const fim = new Date(inicio); fim.setDate(fim.getDate() + 1);
+
+  // Uma só condição na consulta (por barbeiro) para não exigir índice composto.
+  const snap = await getDocs(query(collection(db, COL_PUB), where('barbeiroId', '==', barbeiroId)));
+  return snap.docs
+    .map((d) => {
+      const x = d.data();
+      return {
+        dataHora: x.dataHora?.toDate?.() ?? new Date(x.dataHora),
+        duracaoMin: x.duracaoMin,
+        status: x.status,
+      };
+    })
+    .filter((o) => o.dataHora >= inicio && o.dataHora < fim);
 }
 
 // ── Cálculo de horários livres ───────────────────────────────
@@ -111,8 +157,8 @@ export async function horariosLivres(barbeiroId, servicoId, data) {
   const diaBase = typeof data === 'string' ? dataLocalDeISO(data) : new Date(data);
   diaBase.setHours(0, 0, 0, 0);
 
-  // Busca ocupações do barbeiro nesse dia (ignora cancelados/recusados).
-  const ocupados = (await listarPorDia(diaBase, barbeiroId))
+  // Busca ocupações do barbeiro (da gaveta PÚBLICA — sem dados pessoais).
+  const ocupados = (await ocupacoesDoDia(barbeiroId, diaBase))
     .filter((a) => a.status !== 'cancelado' && a.status !== 'recusado')
     .map((a) => ({ inicio: a.dataHora, fim: new Date(a.dataHora.getTime() + a.duracaoMin * 60000) }));
 
