@@ -1,5 +1,5 @@
 import {
-  collection, updateDoc, doc, setDoc, query, where, getDocs,
+  collection, updateDoc, doc, setDoc, getDoc, runTransaction, query, where, getDocs,
   Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -9,42 +9,68 @@ import { dataLocalDeISO, ehDataPassada } from './datas';
 const COL = 'agendamentos';       // gaveta PRIVADA: dados completos (email etc.)
 const COL_PUB = 'ocupacoes';      // gaveta PÚBLICA: só horário/duração/status
 
-// Cria um agendamento. Escreve em DUAS coleções com o MESMO id:
-//  - 'agendamentos' (privada): tudo, inclusive email — só dono e equipe leem.
-//  - 'ocupacoes'   (pública): só o necessário para calcular horários livres,
-//                             sem nenhum dado pessoal.
+// Monta um ID único e determinístico para um horário: barbeiro + data + hora.
+// Como o Firestore não deixa criar dois documentos com o MESMO id, isso impede
+// que duas pessoas agendem o mesmo horário (o segundo a tentar simplesmente falha).
+function idDoHorario(barbeiroId, dataHora) {
+  const d = new Date(dataHora);
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${barbeiroId}_${ano}-${mes}-${dia}_${hh}${mm}`;
+}
+
+// Cria um agendamento de forma SEGURA contra agendamento duplo.
+// Usa uma transação: só cria se o horário (documento em 'ocupacoes' com id
+// determinístico) ainda não existir. Se duas pessoas tentarem o mesmo horário
+// ao mesmo tempo, apenas uma consegue; a outra recebe erro de "horário ocupado".
 export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, barbeiroId, servicoId, dataHora }) {
   const servico = servicoPorId(servicoId);
   if (!servico) throw new Error('Serviço inválido.');
 
   const ts = Timestamp.fromDate(new Date(dataHora));
-  const ref = doc(collection(db, COL));   // gera um id novo, usado nas duas gavetas
-  const id = ref.id;
+  const id = idDoHorario(barbeiroId, dataHora); // MESMO id nas duas gavetas
+  const refPriv = doc(db, COL, id);
+  const refPub = doc(db, COL_PUB, id);
 
-  // Gaveta privada — dados completos.
-  await setDoc(ref, {
-    clienteUid,
-    clienteEmail,
-    clienteNome: clienteNome || '',
-    barbeiroId,
-    servicoId,
-    servicoNome: servico.nome,
-    duracaoMin: servico.duracaoMin,
-    preco: servico.preco,
-    dataHora: ts,
-    status: 'pendente',
-    criadoEm: serverTimestamp(),
+  await runTransaction(db, async (tx) => {
+    // Verifica se o horário já está ocupado (documento público já existe).
+    const jaExiste = await tx.get(refPub);
+    if (jaExiste.exists()) {
+      const st = jaExiste.data().status;
+      // Só bloqueia se o agendamento existente estiver ativo (não cancelado/recusado).
+      if (st !== 'cancelado' && st !== 'recusado') {
+        throw new Error('HORARIO_OCUPADO');
+      }
+    }
+
+    // Gaveta privada — dados completos.
+    tx.set(refPriv, {
+      clienteUid,
+      clienteEmail,
+      clienteNome: clienteNome || '',
+      barbeiroId,
+      servicoId,
+      servicoNome: servico.nome,
+      duracaoMin: servico.duracaoMin,
+      preco: servico.preco,
+      dataHora: ts,
+      status: 'pendente',
+      criadoEm: serverTimestamp(),
+    });
+
+    // Gaveta pública — só o necessário para o cálculo de horários. Sem dados pessoais.
+    tx.set(refPub, {
+      barbeiroId,
+      dataHora: ts,
+      duracaoMin: servico.duracaoMin,
+      status: 'pendente',
+    });
   });
 
-  // Gaveta pública — só o que o cálculo de horários precisa. Sem email/nome.
-  await setDoc(doc(db, COL_PUB, id), {
-    barbeiroId,
-    dataHora: ts,
-    duracaoMin: servico.duracaoMin,
-    status: 'pendente',
-  });
-
-  return ref;
+  return { id };
 }
 
 // Converte um documento do Firestore num objeto simples de usar na tela.

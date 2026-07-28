@@ -80,8 +80,16 @@ export default function Portal() {
       });
       setSucesso('Pedido enviado! Ele fica pendente até a barbearia confirmar.');
       setHorarios([]); setHorarioSel(null); setBuscou(false);
-    } catch {
-      setErro('Não foi possível agendar. O horário pode ter sido ocupado.');
+    } catch (e) {
+      if (e?.message === 'HORARIO_OCUPADO') {
+        // Alguém pegou esse horário primeiro. Avisa e atualiza a lista.
+        setErro('Esse horário acabou de ser reservado por outra pessoa. Escolha outro, por favor.');
+        setHorarioSel(null);
+        buscarHorarios(); // recarrega para tirar o horário que ficou ocupado
+      } else {
+        console.error('Erro ao agendar:', e);
+        setErro('Não foi possível agendar. Tente de novo.');
+      }
     } finally {
       setEnviando(false);
     }
