@@ -47,8 +47,10 @@ export default function Portal() {
       const livres = await horariosLivres(barbeiroId, servicoId, data);
       setHorarios(livres);
       setBuscou(true);
-    } catch {
-      setErro('Não foi possível buscar os horários. Tente de novo.');
+    } catch (e) {
+      // TEMPORÁRIO (diagnóstico): mostra o erro real na tela e no console.
+      console.error('ERRO ao buscar horários:', e);
+      setErro('ERRO: ' + (e?.message || String(e)));
     } finally {
       setBuscando(false);
     }
