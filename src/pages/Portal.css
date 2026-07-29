@@ -124,3 +124,17 @@
   .meu-lado { border-left: none; border-top: 1px solid var(--line); width: 100%;
     flex-direction: row; justify-content: space-between; align-items: center; }
 }
+
+/* Faixa de aviso do topo (recado do Stevon) */
+.faixa-aviso {
+  background: linear-gradient(90deg, var(--brass-dim), var(--brass));
+  color: #1a1512;
+  font-weight: 600;
+  text-align: center;
+  padding: .7rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0 0;
+  font-size: .92rem;
+  line-height: 1.4;
+  box-shadow: 0 2px 10px rgba(201,162,75,.25);
+}

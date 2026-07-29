@@ -21,10 +21,14 @@ export default function Portal() {
   const [aba, setAba] = useState('agendar');
   const [clienteNome, setClienteNome] = useState('');
   const [bloqueios, setBloqueios] = useState([]);
+  const [aviso, setAviso] = useState('');
 
-  // Carrega as datas bloqueadas (para mostrar a mensagem certa).
+  // Carrega as datas bloqueadas e o aviso do topo.
   useEffect(() => {
-    lerConfig().then((cfg) => setBloqueios(cfg.bloqueios || [])).catch(() => {});
+    lerConfig().then((cfg) => {
+      setBloqueios(cfg.bloqueios || []);
+      setAviso((cfg.aviso || '').trim());
+    }).catch(() => {});
   }, []);
 
   // Carrega o nome do perfil do cliente (para gravar no agendamento).
@@ -141,6 +145,10 @@ export default function Portal() {
           <button className="btn-sair" onClick={sairApp}>Sair</button>
         </div>
       </header>
+
+      {aviso && (
+        <div className="faixa-aviso" role="status">{aviso}</div>
+      )}
 
       <nav className="abas">
         <button className={aba === 'agendar' ? 'ativa' : ''} onClick={() => { setAba('agendar'); setErro(''); }}>

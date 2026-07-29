@@ -16,6 +16,7 @@ export default function Configuracoes() {
   const navigate = useNavigate();
 
   const [whatsapp, setWhatsapp] = useState('');
+  const [aviso, setAviso] = useState('');
   const [bloqueios, setBloqueios] = useState([]);
   const [novoDe, setNovoDe] = useState('');
   const [novoAte, setNovoAte] = useState('');
@@ -29,6 +30,7 @@ export default function Configuracoes() {
     lerConfig()
       .then((cfg) => {
         setWhatsapp(cfg.whatsapp || '');
+        setAviso(cfg.aviso || '');
         setBloqueios(cfg.bloqueios || []);
       })
       .catch(() => setErro('Não foi possível carregar as configurações.'))
@@ -38,7 +40,7 @@ export default function Configuracoes() {
   async function salvar() {
     setSalvando(true); setSucesso(''); setErro('');
     try {
-      await salvarConfig({ whatsapp: soDigitos(whatsapp) });
+      await salvarConfig({ whatsapp: soDigitos(whatsapp), aviso: aviso.trim() });
       setSucesso('Configurações salvas!');
     } catch {
       setErro('Não foi possível salvar. Tente de novo.');
@@ -136,6 +138,23 @@ export default function Configuracoes() {
                   placeholder="(27) 99999-8888"
                 />
               </div>
+
+              <h2 style={{ marginTop: '1.5rem' }}>Aviso no topo do site</h2>
+              <p className="config-ajuda">
+                Mensagem em destaque no topo do site do cliente (promoção, recado,
+                aviso). Deixe em branco para não mostrar nenhum aviso.
+              </p>
+              <div className="campo">
+                <label>Mensagem</label>
+                <input
+                  type="text"
+                  value={aviso}
+                  onChange={(e) => setAviso(e.target.value)}
+                  maxLength={120}
+                  placeholder="Ex.: Promoção: corte + barba com 10% esta semana!"
+                />
+              </div>
+
               <button className="btn" onClick={salvar} disabled={salvando}>
                 {salvando ? 'Salvando…' : 'Salvar'}
               </button>
