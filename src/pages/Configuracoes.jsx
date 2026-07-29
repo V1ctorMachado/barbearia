@@ -2,13 +2,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { lerConfig, salvarConfig, soDigitos } from '../lib/config';
+import { hojeISO } from '../lib/datas';
 import './Configuracoes.css';
+
+const fmtData = (iso) => {
+  if (!iso) return '';
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+};
 
 export default function Configuracoes() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
 
   const [whatsapp, setWhatsapp] = useState('');
+  const [bloqueios, setBloqueios] = useState([]);
+  const [novoDe, setNovoDe] = useState('');
+  const [novoAte, setNovoAte] = useState('');
+  const [novoMotivo, setNovoMotivo] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState('');
@@ -16,7 +27,10 @@ export default function Configuracoes() {
 
   useEffect(() => {
     lerConfig()
-      .then((cfg) => setWhatsapp(cfg.whatsapp || ''))
+      .then((cfg) => {
+        setWhatsapp(cfg.whatsapp || '');
+        setBloqueios(cfg.bloqueios || []);
+      })
       .catch(() => setErro('Não foi possível carregar as configurações.'))
       .finally(() => setCarregando(false));
   }, []);
@@ -28,6 +42,48 @@ export default function Configuracoes() {
       setSucesso('Configurações salvas!');
     } catch {
       setErro('Não foi possível salvar. Tente de novo.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  // Adiciona um bloqueio à lista e já salva no banco.
+  async function adicionarBloqueio() {
+    setErro(''); setSucesso('');
+    if (!novoDe) { setErro('Escolha a data inicial do bloqueio.'); return; }
+    const ate = novoAte || novoDe; // se não informar "até", bloqueia só o dia "de"
+    const de = novoDe;
+    // Ordena para o caso de inverterem as datas.
+    const ini = de <= ate ? de : ate;
+    const fim = de <= ate ? ate : de;
+
+    const novaLista = [...bloqueios, { de: ini, ate: fim, motivo: novoMotivo.trim() }]
+      .sort((a, b) => a.de.localeCompare(b.de));
+
+    setSalvando(true);
+    try {
+      await salvarConfig({ bloqueios: novaLista });
+      setBloqueios(novaLista);
+      setNovoDe(''); setNovoAte(''); setNovoMotivo('');
+      setSucesso('Bloqueio adicionado!');
+    } catch {
+      setErro('Não foi possível salvar o bloqueio. Tente de novo.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  // Remove um bloqueio pelo índice e salva.
+  async function removerBloqueio(indice) {
+    setErro(''); setSucesso('');
+    const novaLista = bloqueios.filter((_, i) => i !== indice);
+    setSalvando(true);
+    try {
+      await salvarConfig({ bloqueios: novaLista });
+      setBloqueios(novaLista);
+      setSucesso('Bloqueio removido.');
+    } catch {
+      setErro('Não foi possível remover. Tente de novo.');
     } finally {
       setSalvando(false);
     }
@@ -83,6 +139,53 @@ export default function Configuracoes() {
               <button className="btn" onClick={salvar} disabled={salvando}>
                 {salvando ? 'Salvando…' : 'Salvar'}
               </button>
+            </section>
+
+            <section className="config-card">
+              <h2>Datas bloqueadas</h2>
+              <p className="config-ajuda">
+                Bloqueie feriados, férias ou folgas. Nesses dias o cliente não
+                consegue agendar. Para bloquear um único dia, preencha só a data
+                inicial (ou repita a mesma nas duas).
+              </p>
+
+              <div className="bloqueio-form">
+                <div className="campo">
+                  <label>De</label>
+                  <input type="date" value={novoDe} min={hojeISO()}
+                         onChange={(e) => setNovoDe(e.target.value)} />
+                </div>
+                <div className="campo">
+                  <label>Até (opcional)</label>
+                  <input type="date" value={novoAte} min={novoDe || hojeISO()}
+                         onChange={(e) => setNovoAte(e.target.value)} />
+                </div>
+                <div className="campo">
+                  <label>Motivo (opcional)</label>
+                  <input type="text" value={novoMotivo} placeholder="Ex.: Feriado, Férias"
+                         onChange={(e) => setNovoMotivo(e.target.value)} />
+                </div>
+                <button className="btn" onClick={adicionarBloqueio} disabled={salvando}>
+                  Adicionar bloqueio
+                </button>
+              </div>
+
+              {bloqueios.length > 0 && (
+                <ul className="bloqueio-lista">
+                  {bloqueios.map((b, i) => (
+                    <li key={i} className="bloqueio-item">
+                      <div className="bloqueio-datas">
+                        {b.de === b.ate
+                          ? fmtData(b.de)
+                          : `${fmtData(b.de)} até ${fmtData(b.ate)}`}
+                        {b.motivo && <span className="bloqueio-motivo">{b.motivo}</span>}
+                      </div>
+                      <button className="btn-remover" onClick={() => removerBloqueio(i)}
+                              disabled={salvando} title="Remover">✕</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
           </>
         )}

@@ -17,6 +17,7 @@ const PADRAO = {
   whatsapp: '',        // número com DDD, só dígitos (ex.: 27999998888)
   aviso: '',           // mensagem/recado no topo do site (vazio = sem aviso)
   avisoAtivo: false,   // liga/desliga o aviso sem apagar o texto
+  bloqueios: [],       // lista de períodos bloqueados: [{ de, ate, motivo }]
 };
 
 // Lê as configurações (devolve os padrões se ainda não existir).
@@ -48,4 +49,23 @@ export function linkWhatsApp(numero, mensagem = '') {
   const completo = n.length <= 11 ? `55${n}` : n;
   const texto = mensagem ? `?text=${encodeURIComponent(mensagem)}` : '';
   return `https://wa.me/${completo}${texto}`;
+}
+
+// ── Datas bloqueadas ─────────────────────────────────────────
+// Cada bloqueio é um período { de: "YYYY-MM-DD", ate: "YYYY-MM-DD", motivo }.
+// Uma data avulsa é um período com de == ate.
+
+// Diz se uma data ("YYYY-MM-DD") cai dentro de algum bloqueio.
+// Comparamos as strings no formato YYYY-MM-DD, que é seguro (ordem
+// alfabética = ordem cronológica) e não sofre com fuso horário.
+export function dataBloqueada(dataISO, bloqueios) {
+  if (!dataISO || !Array.isArray(bloqueios)) return null;
+  for (const b of bloqueios) {
+    const de = b.de <= b.ate ? b.de : b.ate;   // garante ordem correta
+    const ate = b.de <= b.ate ? b.ate : b.de;
+    if (dataISO >= de && dataISO <= ate) {
+      return b; // devolve o bloqueio (com o motivo) para poder exibir
+    }
+  }
+  return null;
 }

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
+import { lerConfig, dataBloqueada } from '../lib/config';
 import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Portal.css';
 
@@ -19,6 +20,12 @@ export default function Portal() {
   const navigate = useNavigate();
   const [aba, setAba] = useState('agendar');
   const [clienteNome, setClienteNome] = useState('');
+  const [bloqueios, setBloqueios] = useState([]);
+
+  // Carrega as datas bloqueadas (para mostrar a mensagem certa).
+  useEffect(() => {
+    lerConfig().then((cfg) => setBloqueios(cfg.bloqueios || [])).catch(() => {});
+  }, []);
 
   // Carrega o nome do perfil do cliente (para gravar no agendamento).
   useEffect(() => {
@@ -211,9 +218,11 @@ export default function Portal() {
                   <p className="vazio-inline">
                     {ehDataPassada(data)
                       ? 'Essa data já passou. Escolha uma data a partir de hoje.'
-                      : abreNoDia(data)
-                        ? 'Nenhum horário livre nessa data. Tente outro dia.'
-                        : 'A barbearia não abre nesse dia (funciona de terça a sábado). Escolha outra data.'}
+                      : dataBloqueada(data, bloqueios)
+                        ? `Fechado nesta data${dataBloqueada(data, bloqueios).motivo ? ' (' + dataBloqueada(data, bloqueios).motivo + ')' : ''}. Escolha outra data.`
+                        : abreNoDia(data)
+                          ? 'Nenhum horário livre nessa data. Tente outro dia.'
+                          : 'A barbearia não abre nesse dia (funciona de terça a sábado). Escolha outra data.'}
                   </p>
                 )}
               </div>

@@ -44,3 +44,29 @@
 .config-ajuda {
   font-size: .85rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5;
 }
+
+/* Formulário de novo bloqueio */
+.bloqueio-form { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1.2rem; }
+.bloqueio-form .btn { margin-top: .5rem; align-self: flex-start; }
+
+/* Lista de bloqueios existentes */
+.bloqueio-lista { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+.bloqueio-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+  padding: .6rem .9rem;
+}
+.bloqueio-datas { font-family: 'Oswald', sans-serif; font-size: 1rem; color: var(--cream);
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.bloqueio-motivo {
+  font-family: 'Inter', sans-serif; font-size: .72rem; color: var(--brass-dim);
+  border: 1px solid var(--brass-dim); border-radius: 3px; padding: .1rem .45rem;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.btn-remover {
+  background: transparent; border: 1px solid var(--red-pole); color: #e8a0a0;
+  width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-size: .85rem;
+  flex-shrink: 0; transition: background .15s;
+}
+.btn-remover:hover { background: rgba(178,59,59,.15); }
+.btn-remover:disabled { opacity: .5; cursor: not-allowed; }

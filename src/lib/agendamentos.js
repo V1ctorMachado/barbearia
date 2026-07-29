@@ -4,7 +4,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { servicoPorId, periodosDoDia } from './dados';
-import { dataLocalDeISO, ehDataPassada } from './datas';
+import { dataLocalDeISO, ehDataPassada, hojeISO } from './datas';
+import { lerConfig, dataBloqueada } from './config';
 
 const COL = 'agendamentos';       // gaveta PRIVADA: dados completos (email etc.)
 const COL_PUB = 'ocupacoes';      // gaveta PÚBLICA: só horário/duração/status
@@ -189,6 +190,13 @@ export async function horariosLivres(barbeiroId, servicoId, data) {
   // Data no passado: não há o que buscar. Retorna vazio na hora, sem
   // consultar o banco (evita qualquer risco de a busca ficar pendurada).
   if (ehDataPassada(data)) return [];
+
+  // Data bloqueada pela barbearia (feriado, férias): sem horários.
+  // (Recebe a data como string "YYYY-MM-DD" para comparação segura.)
+  if (typeof data === 'string') {
+    const cfg = await lerConfig();
+    if (dataBloqueada(data, cfg.bloqueios)) return [];
+  }
 
   const periodos = periodosDoDia(data);
   if (periodos.length === 0) return []; // fechado nesse dia
