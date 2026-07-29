@@ -81,6 +81,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── Configurações da barbearia (WhatsApp, aviso) ──────────
+    // Leitura liberada (o botão de WhatsApp e o aviso aparecem para o
+    // cliente; não há nada sensível). Escrita só pela equipe.
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if ehStaff();
+    }
+
     // ── Marcação de equipe ────────────────────────────────────
     match /roles/{uid} {
       allow read: if logado() && uid == request.auth.uid;

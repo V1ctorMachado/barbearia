@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { STATUS_LABEL } from '../lib/dados';
 import { listarPorDia, listarTodos, atualizarStatus } from '../lib/agendamentos';
+import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Painel.css';
 
 const fmtHora = (d) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -77,6 +78,7 @@ export default function Painel() {
         <div className="pole" />
         <div className="usuario-box">
           <span className="usuario-nome">{usuario?.email}</span>
+          <Link to="/configuracoes" className="btn-sair" style={{ textDecoration: 'none' }}>⚙ Config</Link>
           <button className="btn-sair" onClick={sairApp}>Sair</button>
         </div>
       </header>
@@ -153,6 +155,7 @@ export default function Painel() {
           </article>
         ))}
       </main>
+      <BotaoWhatsApp />
     </div>
   );
 }

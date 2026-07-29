@@ -6,6 +6,7 @@ import Cadastro from './pages/Cadastro';
 import Portal from './pages/Portal';
 import LoginStaff from './pages/LoginStaff';
 import Painel from './pages/Painel';
+import Configuracoes from './pages/Configuracoes';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           {/* Painel da equipe */}
           <Route path="/staff" element={<LoginStaff />} />
           <Route path="/painel" element={<RotaStaff><Painel /></RotaStaff>} />
+          <Route path="/configuracoes" element={<RotaStaff><Configuracoes /></RotaStaff>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

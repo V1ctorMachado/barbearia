@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
+import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Portal.css';
 
 const hojeIso = hojeISO; // usa a versão à prova de fuso
@@ -259,6 +260,7 @@ export default function Portal() {
           )}
         </main>
       )}
+      <BotaoWhatsApp mensagem="Olá! Vim pelo site de agendamento." />
     </div>
   );
 }

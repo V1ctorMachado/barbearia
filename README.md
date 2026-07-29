@@ -1,4 +1,4 @@
-# Barbearia Mageschi — Agendamentos (React + Firebase)
+# Navalha & Cia — Agendamentos (React + Firebase)
 
 Site de agendamento de barbearia, sem backend próprio: o **Firebase** cuida
 do login e do banco de dados, e o site é publicado na **Vercel**.
