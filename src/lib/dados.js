@@ -36,7 +36,7 @@ const H = (hora, min = 0) => hora * 60 + min;
 // Manhã e tarde dos dias de semana (terça a sexta), com intervalo de almoço.
 const DIA_SEMANA = [
   { abre: H(8, 30), fecha: H(11, 0) },   // manhã: último início 11:00
-  { abre: H(13, 30), fecha: H(19, 30) }, // tarde: último início 19:30
+  { abre: H(13, 30), fecha: H(19, 00) }, // tarde: último início 19:30
 ];
 
 export const FUNCIONAMENTO_SEMANA = {
