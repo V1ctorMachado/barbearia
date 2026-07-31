@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
-import { BARBEIROS, SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
+import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
 import { lerConfig, dataBloqueada } from '../lib/config';
@@ -40,7 +40,8 @@ export default function Portal() {
   }, [usuario]);
 
   // Fluxo de agendamento
-  const [barbeiroId, setBarbeiroId] = useState(null);
+  // Barbeiro único (Stevon) — gravado automaticamente, sem o cliente escolher.
+  const barbeiroId = 'stevon';
   const [servicoId, setServicoId] = useState(null);
   const [data, setData] = useState(hojeIso());
   const [horarios, setHorarios] = useState([]);
@@ -56,7 +57,7 @@ export default function Portal() {
   const [meus, setMeus] = useState([]);
 
   const servico = servicoPorId(servicoId);
-  const podeBuscar = barbeiroId && servicoId && data;
+  const podeBuscar = servicoId && data;
 
   async function sairApp() {
     await sair();
@@ -64,7 +65,7 @@ export default function Portal() {
   }
 
   async function buscarHorarios() {
-    if (!podeBuscar) { setErro('Escolha o barbeiro, o serviço e a data.'); return; }
+    if (!podeBuscar) { setErro('Escolha o serviço e a data.'); return; }
     setBuscando(true); setErro(''); setHorarioSel(null); setHorarios([]); setBuscou(false);
     try {
       const livres = await horariosLivres(barbeiroId, servicoId, data);
@@ -165,21 +166,6 @@ export default function Portal() {
           <div className="passo">
             <span className="passo-num">1</span>
             <div className="passo-corpo">
-              <label>Escolha o barbeiro</label>
-              <div className="opcoes">
-                {BARBEIROS.map((b) => (
-                  <button key={b.id} className={`chip ${barbeiroId === b.id ? 'sel' : ''}`}
-                          onClick={() => setBarbeiroId(b.id)}>
-                    {b.nome}<small>{b.especialidades}</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="passo">
-            <span className="passo-num">2</span>
-            <div className="passo-corpo">
               <label>Escolha o serviço</label>
               <div className="opcoes">
                 {SERVICOS.map((s) => (
@@ -193,7 +179,7 @@ export default function Portal() {
           </div>
 
           <div className="passo">
-            <span className="passo-num">3</span>
+            <span className="passo-num">2</span>
             <div className="passo-corpo">
               <label>Escolha a data</label>
               <div className="data-linha">
@@ -207,7 +193,7 @@ export default function Portal() {
 
           {buscou && (
             <div className="passo">
-              <span className="passo-num">4</span>
+              <span className="passo-num">3</span>
               <div className="passo-corpo">
                 <label>Horários disponíveis</label>
                 {horarios.length > 0 ? (
@@ -261,7 +247,6 @@ export default function Portal() {
                 <div className="meu-info">
                   <span className="meu-data">{fmtDataHora(ag.dataHora)}</span>
                   <strong>{ag.servicoNome}</strong>
-                  <span className="meu-barbeiro">com {BARBEIROS.find((b) => b.id === ag.barbeiroId)?.nome || ag.barbeiroId}</span>
                 </div>
                 <div className="meu-lado">
                   <span className="meu-status">{STATUS_LABEL[ag.status]}</span>
