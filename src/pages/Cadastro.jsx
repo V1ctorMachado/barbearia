@@ -44,7 +44,7 @@ export default function Cadastro() {
   return (
     <div className="tela-centro">
       <form className="cartao" onSubmit={enviar}>
-        <div className="poles-mini"><span className="pole-mini" /><span className="pole-mini" /></div>
+        <img src="/logo.png" alt="Barbearia Mageschi" className="logo-cartao" />
         <h1 className="marca">Criar conta</h1>
         <p className="sub">Agende seu horário online</p>
 

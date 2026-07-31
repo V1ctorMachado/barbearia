@@ -133,13 +133,11 @@ export default function Portal() {
 
   return (
     <div className="portal-shell">
-      <header className="topbar">
-        <div className="pole" />
-        <div className="brand">
-          <h1 className="marca">Barbearia Mageschi</h1>
+      <header className="topbar topbar-logo">
+        <div className="brand-logo">
+          <img src="/logo.png" alt="Barbearia Mageschi" className="logo-img" />
           <span className="tagline">Agende seu horário</span>
         </div>
-        <div className="pole" />
         <div className="usuario-box">
           <span className="usuario-nome">{usuario?.email}</span>
           <button className="btn-sair" onClick={sairApp}>Sair</button>

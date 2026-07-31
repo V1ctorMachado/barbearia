@@ -69,13 +69,11 @@ export default function Painel() {
 
   return (
     <div className="painel-shell">
-      <header className="topbar">
-        <div className="pole" />
-        <div className="brand">
-          <h1 className="marca">Barbearia Mageschi</h1>
+      <header className="topbar topbar-logo">
+        <div className="brand-logo">
+          <img src="/logo.png" alt="Barbearia Mageschi" className="logo-img" />
           <span className="tagline">Painel</span>
         </div>
-        <div className="pole" />
         <div className="usuario-box">
           <span className="usuario-nome">{usuario?.email}</span>
           <Link to="/configuracoes" className="btn-sair" style={{ textDecoration: 'none' }}>⚙ Config</Link>

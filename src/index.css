@@ -1,10 +1,10 @@
 :root {
-  --ink: #1a1512;
-  --panel: #242019;
-  --panel-2: #2d2820;
-  --brass: #c9a24b;
-  --brass-dim: #8f7333;
-  --cream: #f2e8d5;
+  --ink: #141210;
+  --panel: #201c17;
+  --panel-2: #29241d;
+  --brass: #d4af37;
+  --brass-dim: #9c7c28;
+  --cream: #f5ecd8;
   --muted: #9a8f78;
   --red-pole: #b23b3b;
   --blue-pole: #2f5d8a;
@@ -125,3 +125,30 @@ input[type="date"], input[type="datetime-local"] { color-scheme: dark; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ── Logo da marca (usada em todas as telas) ─────────────── */
+/* Header com logo (Portal, Painel, Configurações) */
+.topbar-logo {
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  position: relative;
+}
+.brand-logo {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .4rem; text-align: center;
+}
+.logo-img {
+  width: 100%; max-width: 300px; height: auto; display: block;
+}
+.topbar-logo .tagline {
+  font-size: .7rem; letter-spacing: .32em; text-transform: uppercase; color: var(--muted);
+}
+.topbar-logo .usuario-box {
+  position: absolute; top: .5rem; right: 0;
+}
+/* Logo nos cartões de login/cadastro */
+.logo-cartao {
+  width: 100%; max-width: 240px; height: auto; display: block;
+  margin: 0 auto 1rem;
+}

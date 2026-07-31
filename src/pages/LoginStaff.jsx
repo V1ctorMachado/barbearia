@@ -41,8 +41,7 @@ export default function LoginStaff() {
   return (
     <div className="tela-centro">
       <form className="cartao" onSubmit={enviar}>
-        <div className="poles-mini"><span className="pole-mini" /><span className="pole-mini" /></div>
-        <h1 className="marca">Barbearia Mageschi</h1>
+        <img src="/logo.png" alt="Barbearia Mageschi" className="logo-cartao" />
         <p className="sub">Acesso da equipe</p>
 
         {erro && <div className="alerta">{erro}</div>}
