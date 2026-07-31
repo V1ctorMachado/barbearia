@@ -1,0 +1,30 @@
+.faixa-aviso {
+  background: linear-gradient(90deg, var(--brass-dim), var(--brass));
+  color: #1a1512;
+  padding: .7rem 1.1rem;
+  border-radius: 8px;
+  margin: 1rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-weight: 600;
+  font-size: .92rem;
+  box-shadow: 0 3px 12px rgba(201, 162, 75, .25);
+  animation: aviso-entra .3s ease;
+}
+.faixa-aviso-icone {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.faixa-aviso-texto {
+  line-height: 1.35;
+}
+
+@keyframes aviso-entra {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faixa-aviso { animation: none; }
+}
