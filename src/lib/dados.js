@@ -30,7 +30,7 @@ export const BARBEIROS = [
 //    "abre":  minuto em que o período começa.
 //    "fecha": minuto do ÚLTIMO atendimento poder COMEÇAR (um serviço
 //             longo pode terminar depois — ex.: começar 11:00 e ir
-//             até 11:50; ou no sábado começar 11:30 e ir até 13:00).
+//             até 11:50; ou no sábado começar 14:00 e ir até 15:30).
 //  Dias fechados: lista vazia [].
 //
 //  Índice: 0=Domingo, 1=Segunda, ..., 6=Sábado (padrão do JavaScript).
@@ -50,7 +50,7 @@ export const FUNCIONAMENTO_SEMANA = {
   3: DIA_SEMANA,                            // Quarta
   4: DIA_SEMANA,                            // Quinta
   5: DIA_SEMANA,                            // Sexta
-  6: [{ abre: H(8, 30), fecha: H(12, 0) }], // Sábado — período único, sem intervalo
+  6: [{ abre: H(8, 30), fecha: H(14, 0) }], // Sábado — período único, sem intervalo; último início 14:00
 };
 
 // Devolve a lista de períodos de uma data (lista vazia se fechado).
@@ -78,3 +78,10 @@ export const STATUS_LABEL = {
 
 export const servicoPorId = (id) => SERVICOS.find((s) => s.id === id);
 export const barbeiroPorId = (id) => BARBEIROS.find((b) => b.id === id);
+
+// ── Fase de testes ─────────────────────────────────────────────
+// true = mostra o botão "Excluir" (🗑) nos cards do painel da EQUIPE,
+// para apagar agendamentos de teste. Clientes nunca veem esse botão,
+// e as regras do Firebase só deixam a equipe apagar.
+// Quando o site entrar em uso de verdade, troque para false.
+export const PERMITIR_EXCLUIR = true;

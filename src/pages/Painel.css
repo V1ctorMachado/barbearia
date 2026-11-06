@@ -131,3 +131,7 @@
 }
 .btn-carregar-mais:hover:not(:disabled) { background: rgba(212, 175, 55, .08); }
 .btn-carregar-mais:disabled { opacity: .6; cursor: default; }
+
+/* Botão de excluir (fase de testes) — discreto, em vermelho */
+.acoes button.excluir { color: var(--red-pole); border-style: dashed; }
+.acoes button.excluir:hover { background: rgba(178,59,59,.15); }

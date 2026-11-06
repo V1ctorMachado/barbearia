@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { STATUS_LABEL } from '../lib/dados';
-import { listarPorDia, listarProximos, atualizarStatus } from '../lib/agendamentos';
+import { STATUS_LABEL, PERMITIR_EXCLUIR } from '../lib/dados';
+import { listarPorDia, listarProximos, atualizarStatus, excluirAgendamento } from '../lib/agendamentos';
 import { linkWhatsApp } from '../lib/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -95,6 +95,20 @@ export default function Painel() {
   }
 
   useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [data]);
+
+  // Fase de testes: apaga o agendamento de vez (pedido + horário).
+  async function excluir(ag) {
+    const quando = fmtDataCurta(ag.dataHora) + ' ' + fmtHora(ag.dataHora);
+    const quem = ag.clienteNome || ag.clienteEmail || 'cliente';
+    if (!window.confirm(`EXCLUIR de vez o agendamento de ${quem} (${quando})?\n\nIsso não pode ser desfeito.`)) return;
+    try {
+      await excluirAgendamento(ag);
+      setAgs((atual) => atual.filter((a) => a.id !== ag.id));
+    } catch (e) {
+      console.error('Erro ao excluir:', e);
+      setErro('Não foi possível excluir o agendamento.');
+    }
+  }
 
   // Ações que tiram o cliente da agenda pedem confirmação.
   const PERGUNTA = { recusado: 'Recusar este pedido?', cancelado: 'Cancelar este agendamento?' };
@@ -214,6 +228,9 @@ export default function Painel() {
                 )}
                 {['agendado', 'confirmado'].includes(ag.status) && (
                   <button className="danger" onClick={() => mudar(ag, 'cancelado')} title="Cancelar">✕</button>
+                )}
+                {PERMITIR_EXCLUIR && (
+                  <button className="excluir" onClick={() => excluir(ag)} title="Excluir de vez (fase de testes)">🗑</button>
                 )}
               </div>
             </div>

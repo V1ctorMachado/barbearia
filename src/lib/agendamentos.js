@@ -153,6 +153,26 @@ export async function listarProximos(cursor = null, tamanho = TAMANHO_PAGINA) {
   };
 }
 
+// Apaga o agendamento de vez (só a equipe — garantido pelas regras).
+// Remove o pedido e, se o horário ainda é dele, a ocupação também,
+// liberando o horário. Usado na fase de testes.
+export async function excluirAgendamento(ag) {
+  const pubId = ag.ocupacaoId || ag.id; // agendamentos antigos: mesmo id
+  const refPriv = doc(db, COL, ag.id);
+  const refPub = doc(db, COL_PUB, pubId);
+
+  let pub = null;
+  try { pub = await getDoc(refPub); } catch { /* sem ocupação — segue */ }
+
+  const lote = writeBatch(db);
+  lote.delete(refPriv);
+  // Não apaga a ocupação se o horário já foi reservado por outra pessoa.
+  if (pub?.exists() && (pub.data().agendamentoId ?? pubId) === ag.id) {
+    lote.delete(refPub);
+  }
+  await lote.commit();
+}
+
 // Atualiza o status nas DUAS gavetas (privada e pública) de uma vez só.
 // Se o agendamento foi cancelado/recusado, o horário volta a ficar livre.
 // Recebe o agendamento inteiro (precisa do id e do ocupacaoId).
