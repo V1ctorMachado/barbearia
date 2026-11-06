@@ -1,6 +1,6 @@
 import {
-  collection, updateDoc, doc, setDoc, getDoc, runTransaction, query, where, getDocs,
-  Timestamp, serverTimestamp,
+  collection, doc, getDoc, runTransaction, writeBatch, query, where, getDocs,
+  orderBy, limit, startAfter, Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { servicoPorId, periodosDoDia } from './dados';
@@ -9,6 +9,15 @@ import { lerConfig, dataBloqueada } from './config';
 
 const COL = 'agendamentos';       // gaveta PRIVADA: dados completos (email etc.)
 const COL_PUB = 'ocupacoes';      // gaveta PÚBLICA: só horário/duração/status
+
+// Como os IDs funcionam:
+//  • ocupacoes/{barbeiro_data_hora} — ID FIXO por horário. É ele que impede
+//    agendamento duplo. Guarda "agendamentoId": qual pedido ocupa o horário.
+//  • agendamentos/{id automático} — cada pedido tem ID PRÓPRIO e nunca é
+//    sobrescrito. Assim, se o horário for cancelado e outra pessoa reservar,
+//    o histórico do primeiro cliente continua intacto.
+//  Agendamentos antigos (de antes desta mudança) usam o mesmo ID nas duas
+//  gavetas; o código abaixo trata esse caso.
 
 // Monta um ID único e determinístico para um horário: barbeiro + data + hora.
 // Como o Firestore não deixa criar dois documentos com o MESMO id, isso impede
@@ -32,9 +41,10 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
   if (!servico) throw new Error('Serviço inválido.');
 
   const ts = Timestamp.fromDate(new Date(dataHora));
-  const id = idDoHorario(barbeiroId, dataHora); // MESMO id nas duas gavetas
-  const refPriv = doc(db, COL, id);
-  const refPub = doc(db, COL_PUB, id);
+  const ocupacaoId = idDoHorario(barbeiroId, dataHora); // id fixo do horário
+  const refPub = doc(db, COL_PUB, ocupacaoId);
+  const refPriv = doc(collection(db, COL));            // id novo, automático
+  const id = refPriv.id;
 
   await runTransaction(db, async (tx) => {
     // Verifica se o horário já está ocupado (documento público já existe).
@@ -59,6 +69,7 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
       preco: servico.preco,
       dataHora: ts,
       status: 'pendente',
+      ocupacaoId,
       criadoEm: serverTimestamp(),
     });
 
@@ -68,6 +79,7 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
       dataHora: ts,
       duracaoMin: servico.duracaoMin,
       status: 'pendente',
+      agendamentoId: id,
     });
   });
 
@@ -98,52 +110,68 @@ export async function listarPorCliente(clienteUid) {
     .sort((a, b) => b.dataHora - a.dataHora); // mais recentes primeiro
 }
 
-// Agendamentos de um dia (painel da equipe). Opcionalmente filtra por barbeiro.
-export async function listarPorDia(data, barbeiroId = null) {
+// Agendamentos de um dia (painel da equipe).
+// A consulta já pede só aquele dia ao Firestore (filtro de intervalo num
+// único campo — não exige índice composto).
+export async function listarPorDia(data) {
   // Aceita string "YYYY-MM-DD" (do painel) ou Date. Meia-noite LOCAL.
   const inicio = typeof data === 'string' ? dataLocalDeISO(data) : new Date(data);
   inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio);  fim.setDate(fim.getDate() + 1);
 
-  // Para nunca exigir índice composto no Firestore, a consulta usa no máximo
-  // UM critério. Se há barbeiro, filtramos por ele no banco; senão, filtramos
-  // pelo intervalo de datas. O restante do filtro (a "peneira" fina) acontece
-  // aqui no navegador, sobre os resultados.
-  let snap;
-  if (barbeiroId) {
-    snap = await getDocs(query(collection(db, COL), where('barbeiroId', '==', barbeiroId)));
-  } else {
-    snap = await getDocs(query(
-      collection(db, COL),
-      where('dataHora', '>=', Timestamp.fromDate(inicio)),
-      where('dataHora', '<', Timestamp.fromDate(fim)),
-    ));
+  const snap = await getDocs(query(
+    collection(db, COL),
+    where('dataHora', '>=', Timestamp.fromDate(inicio)),
+    where('dataHora', '<', Timestamp.fromDate(fim)),
+    orderBy('dataHora'),
+  ));
+  return snap.docs.map(mapear);
+}
+
+// Próximos agendamentos (de hoje em diante), em PÁGINAS. É o que o painel
+// mostra quando nenhuma data está escolhida. Em vez de baixar o histórico
+// inteiro, traz "tamanho" por vez; "cursor" é o último documento da página
+// anterior (null na primeira). Devolve { itens, cursor, temMais }.
+export const TAMANHO_PAGINA = 50;
+
+export async function listarProximos(cursor = null, tamanho = TAMANHO_PAGINA) {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const partes = [
+    collection(db, COL),
+    where('dataHora', '>=', Timestamp.fromDate(hoje)),
+    orderBy('dataHora'),
+  ];
+  if (cursor) partes.push(startAfter(cursor));
+  partes.push(limit(tamanho + 1)); // +1 só para saber se há mais páginas
+
+  const snap = await getDocs(query(...partes));
+  const docs = snap.docs.slice(0, tamanho);
+  return {
+    itens: docs.map(mapear),
+    cursor: docs.length ? docs[docs.length - 1] : cursor,
+    temMais: snap.docs.length > tamanho,
+  };
+}
+
+// Atualiza o status nas DUAS gavetas (privada e pública) de uma vez só.
+// Se o agendamento foi cancelado/recusado, o horário volta a ficar livre.
+// Recebe o agendamento inteiro (precisa do id e do ocupacaoId).
+export async function atualizarStatus(ag, status) {
+  const pubId = ag.ocupacaoId || ag.id; // agendamentos antigos: mesmo id
+  const refPriv = doc(db, COL, ag.id);
+  const refPub = doc(db, COL_PUB, pubId);
+
+  let pub = null;
+  try { pub = await getDoc(refPub); } catch { /* sem ocupação — segue */ }
+
+  const lote = writeBatch(db);
+  lote.update(refPriv, { status });
+  // Só mexe na ocupação se ela ainda é DESTE agendamento. Se o horário já
+  // foi reservado por outra pessoa, a ocupação dela não pode ser alterada.
+  if (pub?.exists() && (pub.data().agendamentoId ?? pubId) === ag.id) {
+    lote.update(refPub, { status });
   }
-
-  return snap.docs
-    .map(mapear)
-    .filter((a) => a.dataHora >= inicio && a.dataHora < fim) // garante o dia certo
-    .sort((a, b) => a.dataHora - b.dataHora);
-}
-
-// Lista TODOS os agendamentos (todos os dias), para o painel da equipe
-// quando nenhuma data está filtrada. Ordena do mais próximo ao mais distante.
-export async function listarTodos() {
-  const snap = await getDocs(query(collection(db, COL)));
-  return snap.docs
-    .map(mapear)
-    .sort((a, b) => a.dataHora - b.dataHora); // data crescente
-}
-
-// Atualiza o status nas DUAS gavetas (privada e pública), para não
-// dessincronizar. Se o agendamento foi cancelado/recusado, ele deixa de
-// contar como horário ocupado.
-export async function atualizarStatus(id, status) {
-  await updateDoc(doc(db, COL, id), { status });
-  // A gaveta pública pode não existir para dados muito antigos; ignora erro.
-  try {
-    await updateDoc(doc(db, COL_PUB, id), { status });
-  } catch { /* documento público ausente (agendamento antigo) — sem problema */ }
+  await lote.commit();
 }
 
 // Lê as OCUPAÇÕES (gaveta pública) de um barbeiro num dia. Não traz
@@ -162,10 +190,18 @@ async function ocupacoesDoDia(barbeiroId, dataDate) {
   const inicio = new Date(dataDate); inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio); fim.setDate(fim.getDate() + 1);
 
-  // Uma só condição na consulta (por barbeiro) para não exigir índice composto.
+  // A consulta pede ao Firestore SÓ o dia escolhido (intervalo em um único
+  // campo — não exige índice composto). O filtro por barbeiro é feito aqui,
+  // sobre os poucos resultados do dia. Antes, baixava todas as ocupações do
+  // barbeiro desde sempre, o que ficava lento com o tempo.
   // Com timeout: se o servidor não responder em 10s, dá erro em vez de travar.
-  const snap = await comTimeout(getDocs(query(collection(db, COL_PUB), where('barbeiroId', '==', barbeiroId))));
+  const snap = await comTimeout(getDocs(query(
+    collection(db, COL_PUB),
+    where('dataHora', '>=', Timestamp.fromDate(inicio)),
+    where('dataHora', '<', Timestamp.fromDate(fim)),
+  )));
   return snap.docs
+    .filter((d) => d.data().barbeiroId === barbeiroId)
     .map((d) => {
       const x = d.data();
       return {
@@ -173,8 +209,7 @@ async function ocupacoesDoDia(barbeiroId, dataDate) {
         duracaoMin: x.duracaoMin,
         status: x.status,
       };
-    })
-    .filter((o) => o.dataHora >= inicio && o.dataHora < fim);
+    });
 }
 
 // ── Cálculo de horários livres ───────────────────────────────

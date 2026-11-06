@@ -117,3 +117,17 @@
 
 /* Email de apoio abaixo do nome do cliente */
 .cliente-email { font-size: .78rem; color: var(--muted); }
+
+/* Telefone do cliente (abre o WhatsApp dele) */
+.cliente-tel { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.cliente-tel:hover { color: var(--brass); }
+
+/* Botão de paginação no fim da lista */
+.btn-carregar-mais {
+  display: block; width: 100%; margin: .5rem 0 1.5rem;
+  padding: .8rem 1rem; border-radius: 8px; cursor: pointer;
+  background: transparent; color: var(--brass);
+  border: 1px solid var(--brass-dim); font: inherit; font-weight: 600;
+}
+.btn-carregar-mais:hover:not(:disabled) { background: rgba(212, 175, 55, .08); }
+.btn-carregar-mais:disabled { opacity: .6; cursor: default; }

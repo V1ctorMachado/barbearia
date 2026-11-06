@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { STATUS_LABEL } from '../lib/dados';
-import { listarPorDia, listarTodos, atualizarStatus } from '../lib/agendamentos';
-import BotaoWhatsApp from '../components/BotaoWhatsApp';
+import { listarPorDia, listarProximos, atualizarStatus } from '../lib/agendamentos';
+import { linkWhatsApp } from '../lib/config';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import './Painel.css';
 
 const fmtHora = (d) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -22,31 +24,88 @@ const FILTROS = [
 export default function Painel() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState(''); // vazio = todos os dias
+  const [data, setData] = useState(''); // vazio = de hoje em diante
   const [filtro, setFiltro] = useState('ativos'); // padrão: os que precisam de atenção
   const [ags, setAgs] = useState([]);
+  const [telefones, setTelefones] = useState({}); // uid → telefone do cadastro
   const [carregando, setCarregando] = useState(false);
+  const [carregandoMais, setCarregandoMais] = useState(false);
   const [erro, setErro] = useState('');
+
+  // Paginação (só quando nenhuma data está escolhida).
+  const [cursor, setCursor] = useState(null);
+  const [temMais, setTemMais] = useState(false);
+
+  // Telefones já buscados (ou em busca) — evita buscar o mesmo cliente de novo.
+  const telefonesBuscados = useRef(new Set());
 
   async function carregar() {
     setCarregando(true); setErro('');
     try {
-      // Sem data escolhida → todos os dias. Com data → só aquele dia.
-      const lista = data ? await listarPorDia(data) : await listarTodos();
-      setAgs(lista);
-    } catch {
+      if (data) {
+        // Data escolhida → só aquele dia (pode ser passado ou futuro).
+        const lista = await listarPorDia(data);
+        setAgs(lista); setCursor(null); setTemMais(false);
+        carregarTelefones(lista);
+      } else {
+        // Sem data → próximos agendamentos, primeira página.
+        const pag = await listarProximos();
+        setAgs(pag.itens); setCursor(pag.cursor); setTemMais(pag.temMais);
+        carregarTelefones(pag.itens);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar agenda:', e);
       setErro('Não foi possível carregar a agenda.');
     } finally {
       setCarregando(false);
     }
   }
 
+  async function carregarMais() {
+    setCarregandoMais(true); setErro('');
+    try {
+      const pag = await listarProximos(cursor);
+      setAgs((atual) => [...atual, ...pag.itens]);
+      setCursor(pag.cursor); setTemMais(pag.temMais);
+      carregarTelefones(pag.itens);
+    } catch (e) {
+      console.error('Erro ao carregar mais:', e);
+      setErro('Não foi possível carregar mais agendamentos.');
+    } finally {
+      setCarregandoMais(false);
+    }
+  }
+
+  // Busca o telefone do cadastro de cada cliente que aparece na lista
+  // (só os que ainda não foram buscados).
+  async function carregarTelefones(lista) {
+    const faltam = [...new Set(lista.map((a) => a.clienteUid))]
+      .filter((uid) => uid && !telefonesBuscados.current.has(uid));
+    if (faltam.length === 0) return;
+    faltam.forEach((uid) => telefonesBuscados.current.add(uid));
+    const pares = await Promise.all(faltam.map(async (uid) => {
+      try {
+        const snap = await getDoc(doc(db, 'clientes', uid));
+        return [uid, snap.exists() ? (snap.data().telefone || '') : ''];
+      } catch {
+        return [uid, ''];
+      }
+    }));
+    setTelefones((t) => ({ ...t, ...Object.fromEntries(pares) }));
+  }
+
   useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [data]);
 
-  async function mudar(id, status) {
+  // Ações que tiram o cliente da agenda pedem confirmação.
+  const PERGUNTA = { recusado: 'Recusar este pedido?', cancelado: 'Cancelar este agendamento?' };
+
+  async function mudar(ag, status) {
+    if (PERGUNTA[status] && !window.confirm(PERGUNTA[status])) return;
     try {
-      await atualizarStatus(id, status);
-      carregar();
+      await atualizarStatus(ag, status);
+      // Atualiza só o card na tela — sem recarregar a lista inteira do banco
+      // (e sem perder as páginas já carregadas).
+      setAgs((atual) => atual.map((a) => (a.id === ag.id ? { ...a, status } : a)));
     } catch {
       setErro('Não foi possível atualizar o status.');
     }
@@ -83,11 +142,11 @@ export default function Painel() {
 
       <section className="controls">
         <div className="control-group">
-          <label>Data {data ? '' : '(todos os dias)'}</label>
+          <label>Data {data ? '' : '(de hoje em diante)'}</label>
           <div className="data-linha-painel">
             <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
             {data && (
-              <button className="btn-limpar-data" onClick={() => setData('')} title="Ver todos os dias">
+              <button className="btn-limpar-data" onClick={() => setData('')} title="Voltar para os próximos agendamentos">
                 ×
               </button>
             )}
@@ -101,7 +160,7 @@ export default function Painel() {
         </div>
         <div className="spacer" />
         <div className="faturamento">
-          <span className="fat-label">{data ? 'Faturamento do dia' : 'Faturamento total'}</span>
+          <span className="fat-label">{data ? 'Faturamento do dia' : 'Faturamento (lista exibida)'}</span>
           <span className="fat-valor">{brl(faturamento)}</span>
         </div>
       </section>
@@ -112,7 +171,7 @@ export default function Painel() {
         {carregando && <div className="carregando">Carregando…</div>}
         {!carregando && visiveis.length === 0 && (
           <div className="vazio">
-            {data ? 'Nenhum cliente nessa situação para esta data.' : 'Nenhum cliente nessa situação.'}
+            {data ? 'Nenhum cliente nessa situação para esta data.' : 'Nenhum cliente nessa situação nos próximos agendamentos.'}
           </div>
         )}
 
@@ -127,6 +186,14 @@ export default function Painel() {
             <div className="card-info">
               <h3>{ag.clienteNome || ag.clienteEmail}</h3>
               {ag.clienteNome && <p className="cliente-email">{ag.clienteEmail}</p>}
+              {telefones[ag.clienteUid] && (
+                <p className="cliente-email">
+                  <a href={linkWhatsApp(telefones[ag.clienteUid])} target="_blank" rel="noopener noreferrer"
+                     className="cliente-tel" title="Abrir conversa no WhatsApp">
+                    {telefones[ag.clienteUid]}
+                  </a>
+                </p>
+              )}
               <p className="servico">{ag.servicoNome}</p>
             </div>
             <div className="card-lado">
@@ -135,25 +202,30 @@ export default function Painel() {
               <div className="acoes">
                 {ag.status === 'pendente' && (
                   <>
-                    <button className="aprovar" onClick={() => mudar(ag.id, 'agendado')}>Aprovar</button>
-                    <button className="danger" onClick={() => mudar(ag.id, 'recusado')}>Recusar</button>
+                    <button className="aprovar" onClick={() => mudar(ag, 'agendado')}>Aprovar</button>
+                    <button className="danger" onClick={() => mudar(ag, 'recusado')}>Recusar</button>
                   </>
                 )}
                 {ag.status === 'agendado' && (
-                  <button onClick={() => mudar(ag.id, 'confirmado')} title="Confirmar">✓</button>
+                  <button onClick={() => mudar(ag, 'confirmado')} title="Confirmar">✓</button>
                 )}
                 {ag.status === 'confirmado' && (
-                  <button onClick={() => mudar(ag.id, 'concluido')} title="Concluir">✓✓</button>
+                  <button onClick={() => mudar(ag, 'concluido')} title="Concluir">✓✓</button>
                 )}
                 {['agendado', 'confirmado'].includes(ag.status) && (
-                  <button className="danger" onClick={() => mudar(ag.id, 'cancelado')} title="Cancelar">✕</button>
+                  <button className="danger" onClick={() => mudar(ag, 'cancelado')} title="Cancelar">✕</button>
                 )}
               </div>
             </div>
           </article>
         ))}
+
+        {!carregando && temMais && (
+          <button className="btn-carregar-mais" onClick={carregarMais} disabled={carregandoMais}>
+            {carregandoMais ? 'Carregando…' : 'Carregar mais'}
+          </button>
+        )}
       </main>
-      <BotaoWhatsApp />
     </div>
   );
 }

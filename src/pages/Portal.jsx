@@ -64,9 +64,18 @@ export default function Portal() {
     navigate('/login');
   }
 
-  async function buscarHorarios() {
+  // Ao trocar serviço ou data, a lista de horários antiga deixa de valer.
+  // Sem isso, dava para escolher um horário de outro dia ou com outra duração.
+  function limparHorarios() {
+    setHorarios([]); setHorarioSel(null); setBuscou(false); setSucesso('');
+  }
+  function escolherServico(id) { setServicoId(id); limparHorarios(); }
+  function escolherData(valor) { setData(valor); limparHorarios(); }
+
+  // manterErro: usado após "horário ocupado", para a mensagem não sumir.
+  async function buscarHorarios({ manterErro = false } = {}) {
     if (!podeBuscar) { setErro('Escolha o serviço e a data.'); return; }
-    setBuscando(true); setErro(''); setHorarioSel(null); setHorarios([]); setBuscou(false);
+    setBuscando(true); if (!manterErro) setErro(''); setHorarioSel(null); setHorarios([]); setBuscou(false);
     try {
       const livres = await horariosLivres(barbeiroId, servicoId, data);
       setHorarios(livres);
@@ -98,7 +107,7 @@ export default function Portal() {
         // Alguém pegou esse horário primeiro. Avisa e atualiza a lista.
         setErro('Esse horário acabou de ser reservado por outra pessoa. Escolha outro, por favor.');
         setHorarioSel(null);
-        buscarHorarios(); // recarrega para tirar o horário que ficou ocupado
+        buscarHorarios({ manterErro: true }); // recarrega para tirar o horário que ficou ocupado
       } else {
         console.error('Erro ao agendar:', e);
         setErro('Não foi possível agendar. Tente de novo.');
@@ -121,9 +130,11 @@ export default function Portal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aba]);
 
-  async function cancelar(id) {
+  async function cancelar(ag) {
+    const quando = fmtDataHora(ag.dataHora);
+    if (!window.confirm(`Cancelar ${ag.servicoNome} em ${quando}?`)) return;
     try {
-      await atualizarStatus(id, 'cancelado');
+      await atualizarStatus(ag, 'cancelado');
       carregarMeus();
     } catch {
       setErro('Não foi possível cancelar.');
@@ -170,7 +181,7 @@ export default function Portal() {
               <div className="opcoes">
                 {SERVICOS.map((s) => (
                   <button key={s.id} className={`chip ${servicoId === s.id ? 'sel' : ''}`}
-                          onClick={() => setServicoId(s.id)}>
+                          onClick={() => escolherServico(s.id)}>
                     {s.nome}<small>{brl(s.preco)} · {s.duracaoMin}min</small>
                   </button>
                 ))}
@@ -183,8 +194,8 @@ export default function Portal() {
             <div className="passo-corpo">
               <label>Escolha a data</label>
               <div className="data-linha">
-                <input type="date" value={data} min={hojeIso()} onChange={(e) => setData(e.target.value)} />
-                <button className="btn-ghost" onClick={buscarHorarios} disabled={!podeBuscar || buscando}>
+                <input type="date" value={data} min={hojeIso()} onChange={(e) => escolherData(e.target.value)} />
+                <button className="btn-ghost" onClick={() => buscarHorarios()} disabled={!podeBuscar || buscando}>
                   {buscando ? 'Buscando…' : 'Ver horários'}
                 </button>
               </div>
@@ -252,7 +263,7 @@ export default function Portal() {
                   <span className="meu-status">{STATUS_LABEL[ag.status]}</span>
                   <span className="meu-preco">{brl(ag.preco)}</span>
                   {podeCancelar(ag.status) && (
-                    <button className="btn-cancelar" onClick={() => cancelar(ag.id)}>Cancelar</button>
+                    <button className="btn-cancelar" onClick={() => cancelar(ag)}>Cancelar</button>
                   )}
                 </div>
               </article>

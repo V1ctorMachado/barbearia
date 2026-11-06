@@ -1,4 +1,4 @@
-# Navalha & Cia — Agendamentos (React + Firebase)
+# Barbearia Mageschi — Agendamentos (React + Firebase)
 
 Site de agendamento de barbearia, sem backend próprio: o **Firebase** cuida
 do login e do banco de dados, e o site é publicado na **Vercel**.
@@ -7,6 +7,9 @@ do login e do banco de dados, e o site é publicado na **Vercel**.
 - **Login:** Firebase Authentication (e-mail e senha)
 - **Banco:** Cloud Firestore
 - **Hospedagem:** Vercel
+
+> Detalhes do banco, das regras de segurança e do que manter sincronizado
+> estão em **[FIREBASE.md](FIREBASE.md)**.
 
 Duas áreas:
 - **Cliente** (`/`) — cria conta, agenda um horário (entra como *pendente*),
@@ -119,4 +122,9 @@ como `/painel` funcione (sem ele, a Vercel daria 404 nas rotas internas).
 ## Editar serviços, barbeiros ou horário
 
 Estão em `src/lib/dados.js` — é só editar a lista e republicar. O horário de
-funcionamento (padrão 9h–18h) também está lá, em `FUNCIONAMENTO`.
+funcionamento (terça a sábado, com intervalo de almoço) também está lá, em
+`FUNCIONAMENTO_SEMANA`.
+
+> **Atenção:** se mudar **preço ou duração** de um serviço (ou o barbeiro),
+> atualize também a função `servicos()` (ou `barbeiros()`) no `firestore.rules`
+> e publique as regras de novo. Senão, os pedidos desse serviço serão negados.

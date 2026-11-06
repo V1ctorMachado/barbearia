@@ -16,7 +16,6 @@ const REF = () => doc(db, 'config', 'geral');
 const PADRAO = {
   whatsapp: '',        // número com DDD, só dígitos (ex.: 27999998888)
   aviso: '',           // mensagem/recado no topo do site (vazio = sem aviso)
-  avisoAtivo: false,   // liga/desliga o aviso sem apagar o texto
   bloqueios: [],       // lista de períodos bloqueados: [{ de, ate, motivo }]
 };
 
