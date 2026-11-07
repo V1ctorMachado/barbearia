@@ -114,3 +114,30 @@ export function mensagemConfirmacao(ag) {
   };
   return MENSAGEM_CONFIRMACAO.replace(/\{(\w+)\}/g, (m, k) => valores[k] ?? m);
 }
+
+// ── Aviso do CLIENTE para a barbearia (WhatsApp) ───────────────
+// Depois de agendar, o cliente vê o botão "Avisar a barbearia no WhatsApp",
+// que abre a conversa com a barbearia com este texto já escrito.
+// Marcadores: {nome} {servico} {dia} {data} {hora} {preco}
+export const MENSAGEM_AVISO_BARBEARIA = [
+  'Olá! Acabei de agendar pelo site 💈',
+  '',
+  '👤 {nome}',
+  '✂️ {servico} — R$ {preco}',
+  '📅 {dia}, {data} às {hora}',
+  '',
+  'Aguardo a confirmação. Obrigado!',
+].join('\n');
+
+export function mensagemAvisoBarbearia(ag) {
+  const d = ag.dataHora;
+  const valores = {
+    nome: (ag.clienteNome || '').trim() || ag.clienteEmail || 'Cliente',
+    servico: ag.servicoNome || 'serviço',
+    dia: d.toLocaleDateString('pt-BR', { weekday: 'long' }),
+    data: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    hora: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    preco: Number(ag.preco ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+  };
+  return MENSAGEM_AVISO_BARBEARIA.replace(/\{(\w+)\}/g, (m, k) => valores[k] ?? m);
+}

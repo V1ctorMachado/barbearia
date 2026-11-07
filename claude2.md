@@ -104,6 +104,15 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     gráfico por dia/mês, tabela por serviço, aviso de atendimentos passados
     não concluídos, tabela de dados. Totais conferidos no emulador contra uma
     conta feita à parte (480 agendamentos; mês, mês anterior e ano batem).
+20. **Aviso de novo agendamento ao barbeiro:** avaliadas várias opções
+    (Cloud Function + CallMeBot, Telegram, push, ntfy, EmailJS, painel com
+    som). Escolhida a **opção 1, sem servidor:** depois de agendar, o cliente
+    vê o botão **"💬 Avisar a barbearia no WhatsApp"**, que abre a conversa
+    com o número da barbearia (Configurações) e o pedido já escrito. Também
+    aparece "💬 Avisar" em pedidos pendentes de "Meus agendamentos". Texto
+    em `MENSAGEM_AVISO_BARBEARIA` (`src/lib/dados.js`). Depende de o cliente
+    tocar em enviar. Se precisar de garantia, a evolução é a Cloud Function.
+    Testado no emulador.
 
 ---
 

@@ -25,12 +25,17 @@ celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
 4. **Escolhe o horário** e toca em **Confirmar agendamento**.
 5. O pedido entra como **"Aguardando confirmação"** até a barbearia aprovar.
 
+Depois de confirmar, aparece o botão **💬 Avisar a barbearia no WhatsApp**,
+que abre a conversa com a barbearia com o pedido já escrito (nome, serviço,
+valor, dia e horário). Assim a barbearia fica sabendo na hora.
+
 Se duas pessoas tentarem o mesmo horário ao mesmo tempo, **só uma consegue**.
 A outra recebe um aviso e escolhe outro horário.
 
 ### Meus agendamentos
 - Lista dos agendamentos do cliente, com a situação de cada um.
 - **Cancelar** um agendamento ativo, com confirmação antes.
+- **💬 Avisar** a barbearia no WhatsApp, em pedidos ainda aguardando confirmação.
 - O histórico fica guardado, inclusive os cancelados.
 
 ### Contato

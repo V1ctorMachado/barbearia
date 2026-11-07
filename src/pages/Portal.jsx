@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
-import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia } from '../lib/dados';
+import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia, mensagemAvisoBarbearia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
-import { lerConfig, dataBloqueada } from '../lib/config';
+import { lerConfig, dataBloqueada, linkWhatsApp } from '../lib/config';
 import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Portal.css';
 
@@ -22,12 +22,16 @@ export default function Portal() {
   const [clienteNome, setClienteNome] = useState('');
   const [bloqueios, setBloqueios] = useState([]);
   const [aviso, setAviso] = useState('');
+  const [whatsBarbearia, setWhatsBarbearia] = useState('');
+  // Último agendamento feito nesta tela (para o botão "Avisar no WhatsApp").
+  const [ultimo, setUltimo] = useState(null);
 
-  // Carrega as datas bloqueadas e o aviso do topo.
+  // Carrega as datas bloqueadas, o aviso do topo e o WhatsApp da barbearia.
   useEffect(() => {
     lerConfig().then((cfg) => {
       setBloqueios(cfg.bloqueios || []);
       setAviso((cfg.aviso || '').trim());
+      setWhatsBarbearia(cfg.whatsapp || '');
     }).catch(() => {});
   }, []);
 
@@ -67,7 +71,7 @@ export default function Portal() {
   // Ao trocar serviço ou data, a lista de horários antiga deixa de valer.
   // Sem isso, dava para escolher um horário de outro dia ou com outra duração.
   function limparHorarios() {
-    setHorarios([]); setHorarioSel(null); setBuscou(false); setSucesso('');
+    setHorarios([]); setHorarioSel(null); setBuscou(false); setSucesso(''); setUltimo(null);
   }
   function escolherServico(id) { setServicoId(id); limparHorarios(); }
   function escolherData(valor) { setData(valor); limparHorarios(); }
@@ -101,6 +105,10 @@ export default function Portal() {
         dataHora: horarioSel,
       });
       setSucesso('Pedido enviado! Ele fica pendente até a barbearia confirmar.');
+      setUltimo({
+        clienteNome: clienteNome || '', clienteEmail: usuario.email,
+        servicoNome: servico?.nome, preco: servico?.preco, dataHora: horarioSel,
+      });
       setHorarios([]); setHorarioSel(null); setBuscou(false);
     } catch (e) {
       if (e?.message === 'HORARIO_OCUPADO') {
@@ -174,7 +182,20 @@ export default function Portal() {
 
       {aba === 'agendar' && (
         <main className="conteudo">
-          {sucesso && <div className="aviso-ok">{sucesso}</div>}
+          {sucesso && (
+            <div className="aviso-ok">
+              {sucesso}
+              {ultimo && linkWhatsApp(whatsBarbearia) && (
+                <>
+                  <p className="aviso-whats-dica">Para agilizar a confirmação, avise a barbearia:</p>
+                  <a className="btn-whatsapp" target="_blank" rel="noopener noreferrer"
+                     href={linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia(ultimo))}>
+                    💬 Avisar a barbearia no WhatsApp
+                  </a>
+                </>
+              )}
+            </div>
+          )}
           {erro && <div className="alerta">{erro}</div>}
 
           <div className="passo">
@@ -265,6 +286,12 @@ export default function Portal() {
                 <div className="meu-lado">
                   <span className="meu-status">{STATUS_LABEL[ag.status]}</span>
                   <span className="meu-preco">{brl(ag.preco)}</span>
+                  {ag.status === 'pendente' && linkWhatsApp(whatsBarbearia) && (
+                    <a className="btn-whatsapp btn-whatsapp-mini" target="_blank" rel="noopener noreferrer"
+                       href={linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia({ ...ag, clienteNome: ag.clienteNome || clienteNome }))}>
+                      💬 Avisar
+                    </a>
+                  )}
                   {podeCancelar(ag.status) && (
                     <button className="btn-cancelar" onClick={() => cancelar(ag)}>Cancelar</button>
                   )}
