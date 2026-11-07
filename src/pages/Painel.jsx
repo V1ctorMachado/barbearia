@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { STATUS_LABEL, PERMITIR_EXCLUIR } from '../lib/dados';
+import { STATUS_LABEL, PERMITIR_EXCLUIR, mensagemConfirmacao } from '../lib/dados';
 import { listarPorDia, listarProximos, atualizarStatus, excluirAgendamento } from '../lib/agendamentos';
 import { linkWhatsApp } from '../lib/config';
 import { doc, getDoc } from 'firebase/firestore';
@@ -202,9 +202,11 @@ export default function Painel() {
               {ag.clienteNome && <p className="cliente-email">{ag.clienteEmail}</p>}
               {telefones[ag.clienteUid] && (
                 <p className="cliente-email">
-                  <a href={linkWhatsApp(telefones[ag.clienteUid])} target="_blank" rel="noopener noreferrer"
-                     className="cliente-tel" title="Abrir conversa no WhatsApp">
-                    {telefones[ag.clienteUid]}
+                  {/* Abre o WhatsApp do cliente com a mensagem de confirmação pronta */}
+                  <a href={linkWhatsApp(telefones[ag.clienteUid], mensagemConfirmacao(ag))}
+                     target="_blank" rel="noopener noreferrer"
+                     className="cliente-tel" title="Enviar mensagem de confirmação no WhatsApp">
+                    💬 {telefones[ag.clienteUid]}
                   </a>
                 </p>
               )}

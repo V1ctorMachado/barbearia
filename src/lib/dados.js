@@ -85,3 +85,32 @@ export const barbeiroPorId = (id) => BARBEIROS.find((b) => b.id === id);
 // e as regras do Firebase só deixam a equipe apagar.
 // Quando o site entrar em uso de verdade, troque para false.
 export const PERMITIR_EXCLUIR = true;
+
+// ── Mensagem de confirmação pelo WhatsApp ─────────────────────
+// Usada no painel: ao clicar no telefone do cliente, o WhatsApp abre com
+// este texto já escrito. Para mudar o texto, edite MENSAGEM_CONFIRMACAO.
+// Marcadores: {nome} {servico} {dia} {data} {hora} {preco}
+export const MENSAGEM_CONFIRMACAO = [
+  'Olá, {nome}! 👋',
+  'Aqui é da *Barbearia Mageschi*. Obrigado por agendar com a gente! 💈',
+  '',
+  '📅 {dia}, {data} às {hora}',
+  '✂️ {servico} — R$ {preco}',
+  '',
+  'Para *confirmar* seu horário, responda com ✅',
+  'Se *não puder vir*, responda com ❌',
+].join('\n');
+
+export function mensagemConfirmacao(ag) {
+  const d = ag.dataHora;
+  const primeiroNome = (ag.clienteNome || '').trim().split(/\s+/)[0] || 'tudo bem';
+  const valores = {
+    nome: primeiroNome,
+    servico: ag.servicoNome || 'seu serviço',
+    dia: d.toLocaleDateString('pt-BR', { weekday: 'long' }),
+    data: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    hora: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    preco: Number(ag.preco ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+  };
+  return MENSAGEM_CONFIRMACAO.replace(/\{(\w+)\}/g, (m, k) => valores[k] ?? m);
+}
