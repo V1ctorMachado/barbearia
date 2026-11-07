@@ -1,130 +1,153 @@
-# Barbearia Mageschi — Agendamentos (React + Firebase)
+# 💈 Barbearia Mageschi — Agendamento Online
 
-Site de agendamento de barbearia, sem backend próprio: o **Firebase** cuida
-do login e do banco de dados, e o site é publicado na **Vercel**.
+Sistema de agendamento da Barbearia Mageschi. O cliente marca o horário pelo
+celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
 
-- **Frontend:** React + Vite
-- **Login:** Firebase Authentication (e-mail e senha)
-- **Banco:** Cloud Firestore
-- **Hospedagem:** Vercel
-
-> Detalhes do banco, das regras de segurança e do que manter sincronizado
-> estão em **[FIREBASE.md](FIREBASE.md)**.
-
-Duas áreas:
-- **Cliente** (`/`) — cria conta, agenda um horário (entra como *pendente*),
-  vê o histórico em "Meus agendamentos" e pode cancelar.
-- **Equipe** (`/painel`) — vê a agenda do dia e **aprova ou recusa** os pedidos.
+> Como instalar e publicar: [INSTALACAO.md](INSTALACAO.md) ·
+> Banco de dados e regras: [FIREBASE.md](FIREBASE.md)
 
 ---
 
-## Rodar no seu computador
+## Para o cliente
 
-Pré-requisito: [Node.js 18+](https://nodejs.org).
+### Criar conta e entrar
+- Cadastro com **nome, e-mail, telefone e senha**.
+- O login fica salvo no aparelho, então não é preciso entrar toda vez.
 
-```bash
-npm install
-npm run dev
+### Agendar um horário
+1. **Escolhe o serviço**, com o preço e a duração de cada um.
+2. **Escolhe a data** e toca em **Ver horários**.
+3. O sistema mostra **só os horários livres** do dia, considerando:
+   - o horário de funcionamento;
+   - o intervalo de almoço;
+   - a duração do serviço, para não encavalar com outro cliente;
+   - os dias bloqueados pela barbearia (feriados, folgas).
+4. **Escolhe o horário** e toca em **Confirmar agendamento**.
+5. O pedido entra como **"Aguardando confirmação"** até a barbearia aprovar.
+
+Se duas pessoas tentarem o mesmo horário ao mesmo tempo, **só uma consegue**.
+A outra recebe um aviso e escolhe outro horário.
+
+### Meus agendamentos
+- Lista dos agendamentos do cliente, com a situação de cada um.
+- **Cancelar** um agendamento ativo, com confirmação antes.
+- O histórico fica guardado, inclusive os cancelados.
+
+### Contato
+- Botão flutuante do **WhatsApp** da barbearia.
+- **Aviso no topo** do site com novidades e recados da barbearia.
+
+---
+
+## Para a equipe (painel)
+
+Acesso por um login separado, **só para quem é da equipe**.
+
+### Agenda
+- Mostra os **próximos agendamentos** (de hoje em diante), de 50 em 50, com o
+  botão **Carregar mais**.
+- **Filtro por data**, inclusive dias passados.
+- **Filtro por situação:** ativos, só pendentes, só confirmados, todos etc.
+- Cada card mostra o cliente, o e-mail, o telefone, o serviço, o horário e o
+  valor.
+- **Faturamento** somado do dia ou da lista exibida.
+
+### Ações em cada agendamento
+| Ação | Quando |
+|---|---|
+| ✓ **Aprovar** / ✕ **Recusar** | pedido aguardando confirmação |
+| ✓ **Confirmar** | agendamento aprovado, quando o cliente confirma presença |
+| ✓✓ **Concluir** | depois do atendimento |
+| ✕ **Cancelar** | agendamento aprovado ou confirmado |
+| 🗑 **Excluir** | apaga de vez (disponível na fase de testes) |
+
+Recusar, cancelar e excluir **pedem confirmação** antes.
+
+### Mensagem de confirmação no WhatsApp
+Tocar no **💬 telefone do cliente** abre o WhatsApp com uma mensagem pronta:
+agradece o agendamento, mostra o serviço, o dia, o horário e o valor, e pede
+que o cliente responda **✅ para confirmar** ou **❌ se não puder ir**.
+
+### Configurações
+- **WhatsApp da barbearia:** o número usado no botão do site.
+- **Aviso no topo do site:** texto livre (promoções, recados, novidades).
+- **Datas bloqueadas:** um dia ou um período (férias, feriados), com motivo.
+  Nesses dias nenhum horário aparece para o cliente.
+
+---
+
+## Serviços
+
+| Serviço | Preço | Duração |
+|---|---|---|
+| Corte | R$ 35 | 30 min |
+| Barba | R$ 30 | 20 min |
+| Corte + Barba | R$ 65 | 50 min |
+| Pezinho | R$ 10 | 10 min |
+| Pigmentação | R$ 25 | 20 min |
+| Corte + Pigmentação | R$ 60 | 50 min |
+| Luzes | R$ 100 | 90 min |
+| Descoloração | R$ 130 | 90 min |
+
+## Horário de funcionamento
+
+| Dia | Horário de atendimento (último início) |
+|---|---|
+| Terça a sexta | 8:30–11:00 e 13:30–19:00 |
+| Sábado | 8:30–14:00 |
+| Domingo e segunda | Fechado |
+
+---
+
+## Situação de um agendamento
+
+```
+Aguardando confirmação ──► Agendado ──► Confirmado ──► Concluído
+          │                   │              │
+          ▼                   └──────┬───────┘
+       Recusado                      ▼
+                                 Cancelado
 ```
 
-Abre em `http://localhost:5173`. Mas **antes** de funcionar de verdade, você
-precisa configurar o Firebase (abaixo) — senão o login e o banco não respondem.
+- **Cancelado** ou **Recusado:** o horário volta a ficar livre para outros
+  clientes, e o registro continua no histórico.
+- O cliente também pode cancelar enquanto o pedido estiver aguardando
+  confirmação.
 
 ---
 
-## Passo 1 — Criar o projeto no Firebase
+## Segurança e privacidade
 
-1. Acesse <https://console.firebase.google.com> e clique em **Adicionar projeto**.
-2. Dê um nome (ex.: `barbearia`) e conclua a criação.
-3. No menu lateral, vá em **Criação → Authentication → Começar**, escolha
-   **E-mail/senha** e ative.
-4. Vá em **Criação → Firestore Database → Criar banco de dados**. Escolha o
-   modo de produção e uma região (ex.: `southamerica-east1`).
-5. Vá em **Configurações do projeto** (engrenagem no topo) → role até **Seus apps**
-   → clique no ícone **Web** (`</>`) → registre o app. O Firebase mostra um
-   objeto `firebaseConfig` com várias chaves. **Guarde esses valores.**
+- Cada cliente **só vê os próprios agendamentos e dados**.
+- Os outros clientes enxergam apenas que um horário está ocupado, **sem nome
+  nem contato**.
+- Só a equipe aprova, recusa, conclui, exclui e altera as configurações.
+- **Preço e duração são conferidos no servidor:** ninguém consegue agendar
+  pagando um valor diferente da tabela.
+- Ao cancelar, o cliente só muda a situação do pedido, não a data nem o valor.
+- Ninguém consegue "travar" a agenda criando reservas falsas.
 
-## Passo 2 — Conectar o site ao Firebase
+## Desempenho e conexão
 
-Crie um arquivo `.env.local` na raiz do projeto (copie de `.env.example`) e
-preencha com os valores do passo anterior:
-
-```
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-```
-
-> Essas chaves do Firebase **não são segredo** — elas aparecem no navegador de
-> qualquer forma. Quem protege os dados são as Regras de Segurança (passo 3).
-
-## Passo 3 — Publicar as Regras de Segurança (IMPORTANTE)
-
-Sem isto, seu banco fica aberto: qualquer pessoa poderia ler os agendamentos de
-todos. As regras rodam nos servidores do Google e **não podem ser burladas**.
-
-1. No Console, vá em **Firestore Database → aba Regras**.
-2. Apague o que estiver lá e cole todo o conteúdo do arquivo **`firestore.rules`**
-   (incluído neste projeto).
-3. Clique em **Publicar**.
-
-O que as regras garantem: o cliente só vê e mexe nos próprios agendamentos; só
-a equipe vê todos e muda status; um cliente não lê o perfil de outro.
-
-## Passo 4 — Definir quem é da equipe
-
-O Firebase não tem "cargos" prontos. Marcamos a equipe com uma coleção `roles`:
-
-1. Crie a conta da equipe normalmente (pode ser pelo próprio site, em `/cadastro`,
-   ou em **Authentication → Usuários → Adicionar usuário**).
-2. Copie o **UID** dessa conta (aparece em Authentication → Usuários).
-3. Em **Firestore Database → Iniciar coleção**, crie:
-   - Coleção: `roles`
-   - ID do documento: **cole o UID** da conta da equipe
-   - Campo: `staff` (tipo *boolean*) = `true`
-4. Pronto. Essa conta agora acessa o painel em `/painel`.
-
-> Para adicionar mais gente à equipe, repita: um documento em `roles` com o UID
-> da pessoa e `staff: true`.
+- Feito para o **celular**.
+- Cada tela busca só o necessário (um dia, ou 50 agendamentos por vez), então
+  continua rápido mesmo com anos de histórico.
+- Se a internet falhar, o site **avisa e oferece "Tentar novamente"**, em vez
+  de ficar carregando para sempre.
 
 ---
 
-## Publicar na Vercel
+## Endereços
 
-1. Suba este projeto para um repositório no GitHub.
-2. Na [Vercel](https://vercel.com), clique em **Add New → Project** e importe o
-   repositório. Ela detecta o Vite automaticamente.
-3. Em **Settings → Environment Variables**, cadastre as mesmas seis variáveis
-   `VITE_FIREBASE_*` do passo 2.
-4. **Deploy.** A cada `git push`, a Vercel republica sozinha.
-5. No Firebase, vá em **Authentication → Settings → Domínios autorizados** e
-   adicione o domínio da Vercel (e o seu domínio próprio, quando ligar) — senão
-   o login é bloqueado nesses endereços.
-
-O arquivo `vercel.json` já está incluído: ele garante que recarregar uma rota
-como `/painel` funcione (sem ele, a Vercel daria 404 nas rotas internas).
-
----
-
-## Endereços do site
-
-| Quem | Rota | O que é |
-|------|------|---------|
-| Cliente novo | `/cadastro` | Criar conta |
+| Quem | Endereço | O que é |
+|---|---|---|
+| Cliente | `/cadastro` | Criar conta |
 | Cliente | `/login` | Entrar |
-| Cliente | `/` | Agendar e ver histórico |
+| Cliente | `/` | Agendar e ver "Meus agendamentos" |
 | Equipe | `/staff` | Login da equipe |
-| Equipe | `/painel` | Agenda do dia, aprovar/recusar |
+| Equipe | `/painel` | Agenda e ações |
+| Equipe | `/configuracoes` | WhatsApp, aviso e datas bloqueadas |
 
-## Editar serviços, barbeiros ou horário
+---
 
-Estão em `src/lib/dados.js` — é só editar a lista e republicar. O horário de
-funcionamento (terça a sábado, com intervalo de almoço) também está lá, em
-`FUNCIONAMENTO_SEMANA`.
-
-> **Atenção:** se mudar **preço ou duração** de um serviço (ou o barbeiro),
-> atualize também a função `servicos()` (ou `barbeiros()`) no `firestore.rules`
-> e publique as regras de novo. Senão, os pedidos desse serviço serão negados.
+**Tecnologia:** React + Vite · Firebase (login e banco de dados) · hospedagem na Vercel.
