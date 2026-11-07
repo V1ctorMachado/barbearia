@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia, mensagemAvisoBarbearia } from '../lib/dados';
-import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus } from '../lib/agendamentos';
+import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus, marcarAvisoEnviado } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
 import { lerConfig, dataBloqueada, linkWhatsApp } from '../lib/config';
 import BotaoWhatsApp from '../components/BotaoWhatsApp';
@@ -25,6 +25,31 @@ export default function Portal() {
   const [whatsBarbearia, setWhatsBarbearia] = useState('');
   // Último agendamento feito nesta tela (para o botão "Avisar no WhatsApp").
   const [ultimo, setUltimo] = useState(null);
+  // Pedidos em que o cliente já tocou em "Avisar" (vale na hora, antes do servidor responder).
+  const [avisados, setAvisados] = useState(() => new Set());
+
+  const jaAvisou = (ag) => !!ag?.avisoEnviado || avisados.has(ag?.id);
+
+  // O link abre o WhatsApp normalmente; aqui só registramos o toque, uma vez.
+  function registrarAviso(ag) {
+    if (!ag?.id || jaAvisou(ag)) return;
+    setAvisados((s) => new Set(s).add(ag.id));
+    marcarAvisoEnviado(ag.id).catch((e) => console.error('Não foi possível registrar o aviso:', e));
+  }
+
+  // Botão "Avisar" (uma vez só) ou o selo "Aviso enviado!"
+  function BotaoAvisar({ ag, mini = false }) {
+    if (jaAvisou(ag)) {
+      return <span className={`aviso-enviado${mini ? ' mini' : ''}`}>✅ Aviso enviado!</span>;
+    }
+    return (
+      <a className={`btn-whatsapp${mini ? ' btn-whatsapp-mini' : ''}`} target="_blank" rel="noopener noreferrer"
+         href={linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia(ag))}
+         onClick={() => registrarAviso(ag)}>
+        {mini ? '💬 Avisar' : '💬 Avisar a barbearia no WhatsApp'}
+      </a>
+    );
+  }
 
   // Carrega as datas bloqueadas, o aviso do topo e o WhatsApp da barbearia.
   useEffect(() => {
@@ -96,7 +121,7 @@ export default function Portal() {
     if (!horarioSel) { setErro('Escolha um horário.'); return; }
     setEnviando(true); setErro(''); setSucesso('');
     try {
-      await criarAgendamento({
+      const novo = await criarAgendamento({
         clienteUid: usuario.uid,
         clienteEmail: usuario.email,
         clienteNome,
@@ -106,6 +131,7 @@ export default function Portal() {
       });
       setSucesso('Pedido enviado! Ele fica pendente até a barbearia confirmar.');
       setUltimo({
+        id: novo.id, status: 'pendente',
         clienteNome: clienteNome || '', clienteEmail: usuario.email,
         servicoNome: servico?.nome, preco: servico?.preco, dataHora: horarioSel,
       });
@@ -187,11 +213,8 @@ export default function Portal() {
               {sucesso}
               {ultimo && linkWhatsApp(whatsBarbearia) && (
                 <>
-                  <p className="aviso-whats-dica">Para agilizar a confirmação, avise a barbearia:</p>
-                  <a className="btn-whatsapp" target="_blank" rel="noopener noreferrer"
-                     href={linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia(ultimo))}>
-                    💬 Avisar a barbearia no WhatsApp
-                  </a>
+                  {!jaAvisou(ultimo) && <p className="aviso-whats-dica">Para agilizar a confirmação, avise a barbearia:</p>}
+                  <BotaoAvisar ag={ultimo} />
                 </>
               )}
             </div>
@@ -287,10 +310,7 @@ export default function Portal() {
                   <span className="meu-status">{STATUS_LABEL[ag.status]}</span>
                   <span className="meu-preco">{brl(ag.preco)}</span>
                   {ag.status === 'pendente' && linkWhatsApp(whatsBarbearia) && (
-                    <a className="btn-whatsapp btn-whatsapp-mini" target="_blank" rel="noopener noreferrer"
-                       href={linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia({ ...ag, clienteNome: ag.clienteNome || clienteNome }))}>
-                      💬 Avisar
-                    </a>
+                    <BotaoAvisar ag={{ ...ag, clienteNome: ag.clienteNome || clienteNome }} mini />
                   )}
                   {podeCancelar(ag.status) && (
                     <button className="btn-cancelar" onClick={() => cancelar(ag)}>Cancelar</button>

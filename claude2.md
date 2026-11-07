@@ -113,6 +113,16 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     em `MENSAGEM_AVISO_BARBEARIA` (`src/lib/dados.js`). Depende de o cliente
     tocar em enviar. Se precisar de garantia, a evolução é a Cloud Function.
     Testado no emulador.
+21. **Aviso só uma vez:** o botão "Avisar" funciona uma única vez por
+    agendamento; depois mostra "✅ Aviso enviado!". Gravado no Firestore
+    (`avisoEnviado: true`), então vale após recarregar e em outro aparelho.
+    Nova regra: só o dono, só em pedido pendente, só uma vez, sem mexer em
+    outros campos. **Regras alteradas: publicar regras + site juntos.**
+    Testado: 6 cenários de regra + 14 anteriores + tela no celular.
+22. **Favicon** feito da logo: o poste de barbeiro na aba do navegador
+    (16/32/48 px, `favicon.ico` + PNGs) e o emblema completo nos ícones da
+    tela inicial (`apple-touch-icon` 180, `icon-192`, `icon-512`, com
+    `site.webmanifest`). Links em `index.html`.
 
 ---
 

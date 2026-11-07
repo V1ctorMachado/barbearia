@@ -1,5 +1,5 @@
 import {
-  collection, doc, getDoc, runTransaction, writeBatch, query, where, getDocs,
+  collection, doc, getDoc, updateDoc, runTransaction, writeBatch, query, where, getDocs,
   orderBy, limit, startAfter, Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -127,6 +127,12 @@ export async function listarPorDia(data) {
     orderBy('dataHora'),
   )));
   return snap.docs.map(mapear);
+}
+
+// Marca que o cliente já tocou em "Avisar a barbearia no WhatsApp".
+// As regras só permitem isso uma vez, em pedido pendente.
+export async function marcarAvisoEnviado(id) {
+  await comTimeout(updateDoc(doc(db, COL, id), { avisoEnviado: true }), TEMPO_GRAVACAO);
 }
 
 // Todos os agendamentos de um período [inicio, fim) — usado no Faturamento.

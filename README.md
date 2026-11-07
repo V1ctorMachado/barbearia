@@ -27,7 +27,9 @@ celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
 
 Depois de confirmar, aparece o botão **💬 Avisar a barbearia no WhatsApp**,
 que abre a conversa com a barbearia com o pedido já escrito (nome, serviço,
-valor, dia e horário). Assim a barbearia fica sabendo na hora.
+valor, dia e horário). Assim a barbearia fica sabendo na hora. O botão
+funciona **uma vez só** por agendamento; depois aparece **"✅ Aviso enviado!"**
+(vale mesmo recarregando a página ou entrando por outro celular).
 
 Se duas pessoas tentarem o mesmo horário ao mesmo tempo, **só uma consegue**.
 A outra recebe um aviso e escolhe outro horário.

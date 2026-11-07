@@ -167,3 +167,8 @@ input[type="date"], input[type="datetime-local"] { color-scheme: dark; }
 }
 .btn-whatsapp:hover { text-decoration: none; filter: brightness(1.05); }
 .btn-whatsapp-mini { width: auto; white-space: nowrap; padding: .35rem .6rem; font-size: .78rem; border-radius: 6px; }
+.aviso-enviado {
+  display: block; margin-top: .6rem; text-align: center; font-weight: 700; color: #a7d3a7;
+  padding: .6rem; border: 1px dashed var(--green); border-radius: 8px;
+}
+.aviso-enviado.mini { display: inline-block; margin: 0; padding: .3rem .5rem; font-size: .75rem; white-space: nowrap; }
