@@ -68,6 +68,19 @@ Tocar no **💬 telefone do cliente** abre o WhatsApp com uma mensagem pronta:
 agradece o agendamento, mostra o serviço, o dia, o horário e o valor, e pede
 que o cliente responda **✅ para confirmar** ou **❌ se não puder ir**.
 
+### Faturamento
+Tela **📊 Faturamento**, aberta pelo botão no topo do painel, com visão por
+**mês** ou por **ano**:
+- **Faturado:** soma dos atendimentos **concluídos (✓✓)** e quantidade.
+- **Ticket médio** por atendimento.
+- **A receber:** agendamentos ainda não concluídos.
+- **Cancelados / recusados:** quantos foram, sem entrar na soma.
+- **Gráfico** do faturado por dia (mês) ou por mês (ano). Ao tocar numa barra,
+  aparecem o valor e a quantidade de atendimentos.
+- **Por serviço:** quantidade, total e % de cada serviço.
+- **Aviso** de atendimentos que já passaram e não foram marcados como concluídos.
+- Os mesmos números também em **tabela**.
+
 ### Configurações
 - **WhatsApp da barbearia:** o número usado no botão do site.
 - **Aviso no topo do site:** texto livre (promoções, recados, novidades).
@@ -146,6 +159,7 @@ Aguardando confirmação ──► Agendado ──► Confirmado ──► Concl
 | Cliente | `/` | Agendar e ver "Meus agendamentos" |
 | Equipe | `/staff` | Login da equipe |
 | Equipe | `/painel` | Agenda e ações |
+| Equipe | `/faturamento` | Faturamento do mês e do ano |
 | Equipe | `/configuracoes` | WhatsApp, aviso e datas bloqueadas |
 
 ---

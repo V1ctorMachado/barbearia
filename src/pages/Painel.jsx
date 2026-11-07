@@ -149,6 +149,7 @@ export default function Painel() {
         </div>
         <div className="usuario-box">
           <span className="usuario-nome">{usuario?.email}</span>
+          <Link to="/faturamento" className="btn-sair" style={{ textDecoration: 'none' }}>📊 Faturamento</Link>
           <Link to="/configuracoes" className="btn-sair" style={{ textDecoration: 'none' }}>⚙ Config</Link>
           <button className="btn-sair" onClick={sairApp}>Sair</button>
         </div>

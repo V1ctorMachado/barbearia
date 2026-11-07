@@ -11,6 +11,7 @@ import Portal from './pages/Portal';
 // sobrescreve partes do Portal.css. Separar o CSS mudaria o visual.
 import './pages/Painel.css';
 import './pages/Configuracoes.css';
+import './pages/Faturamento.css';
 
 // Telas da equipe: só são baixadas quando alguém entra nelas.
 // O cliente não precisa carregar esse código.
@@ -30,6 +31,7 @@ function lazyComRecarga(importar) {
 const LoginStaff = lazyComRecarga(() => import('./pages/LoginStaff'));
 const Painel = lazyComRecarga(() => import('./pages/Painel'));
 const Configuracoes = lazyComRecarga(() => import('./pages/Configuracoes'));
+const Faturamento = lazyComRecarga(() => import('./pages/Faturamento'));
 
 export default function App() {
   return (
@@ -46,6 +48,7 @@ export default function App() {
           <Route path="/staff" element={<LoginStaff />} />
           <Route path="/painel" element={<RotaStaff><Painel /></RotaStaff>} />
           <Route path="/configuracoes" element={<RotaStaff><Configuracoes /></RotaStaff>} />
+          <Route path="/faturamento" element={<RotaStaff><Faturamento /></RotaStaff>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

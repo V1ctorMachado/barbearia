@@ -21,6 +21,7 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
 - [ ] Decidir sobre a **grade de horários** (hoje avança pela duração do serviço;
       opção: de 30 em 30 min).
 - [ ] Decidir sobre **pagamento online** (plano na seção 4).
+- [ ] Painel: bloco "Pendências anteriores" + opção "Anteriores" no filtro (proposto em 07/11).
 
 ---
 
@@ -90,6 +91,19 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     conexão em 11 s, recupera ao voltar a conexão.
     **Se voltar a acontecer:** anotar celular, navegador e rede (Wi-Fi/4G),
     e testar em outra rede e no computador.
+17. **README reescrito** para mostrar o que o sistema faz (cliente, painel,
+    serviços, horários, status, segurança). As instruções de instalação e
+    publicação foram movidas para **`INSTALACAO.md`**.
+18. "Agendamentos perdidos" após publicar: **não foram perdidos**. O do Renan
+    (06/11 18:00, formato antigo, R$ 30) estava no Firestore. Ele não aparecia
+    porque o painel sem data mostra só de hoje em diante. Proposto mostrar
+    "Pendências anteriores" no painel e a opção "Anteriores" no filtro
+    (ainda não aplicado). O e-mail dele foi digitado errado ("hotmail.con").
+19. **Tela de Faturamento** (`/faturamento`, botão 📊 no painel): mês/ano,
+    faturado (só concluídos ✓✓), ticket médio, a receber, cancelados,
+    gráfico por dia/mês, tabela por serviço, aviso de atendimentos passados
+    não concluídos, tabela de dados. Totais conferidos no emulador contra uma
+    conta feita à parte (480 agendamentos; mês, mês anterior e ano batem).
 
 ---
 

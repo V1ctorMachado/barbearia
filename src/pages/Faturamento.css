@@ -1,0 +1,77 @@
+/* ── Faturamento ─────────────────────────────────────────── */
+.fat-conteudo { max-width: 900px; margin: 0 auto; padding: 0 16px 3rem; }
+
+.fat-filtros { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0 1.25rem; }
+.fat-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.fat-toggle button {
+  background: transparent; color: var(--muted); border: 0; padding: .6rem 1.1rem;
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.fat-toggle button.ativo { background: var(--brass); color: var(--ink); }
+.fat-filtros input, .fat-filtros select {
+  background: var(--panel); color: var(--cream); border: 1px solid var(--line);
+  border-radius: 8px; padding: .55rem .75rem; font: inherit; color-scheme: dark;
+}
+
+.fat-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
+.fat-tile {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 1rem; display: flex; flex-direction: column; gap: .25rem; min-width: 0;
+}
+.fat-tile.principal { border-color: var(--brass-dim); }
+.fat-rotulo { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.fat-valor { font-size: 1.5rem; color: var(--cream); font-variant-numeric: tabular-nums; }
+.fat-tile.principal .fat-valor { color: var(--brass); font-size: 1.9rem; }
+.fat-sub { font-size: .8rem; color: var(--muted); }
+
+.fat-aviso {
+  margin-top: .9rem; padding: .7rem .9rem; border-radius: 8px; font-size: .9rem;
+  background: rgba(212, 175, 55, .08); border: 1px solid var(--brass-dim); color: var(--cream);
+}
+
+.fat-grafico, .fat-servicos, .fat-tabela {
+  margin-top: 1.25rem; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 1rem;
+}
+.fat-grafico h2, .fat-servicos h2 {
+  font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+}
+.fat-grafico-topo { display: flex; justify-content: space-between; gap: .75rem; flex-wrap: wrap; align-items: baseline; }
+.fat-destaque { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fat-destaque strong { color: var(--cream); }
+
+.fat-barras {
+  display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px;
+  height: 180px; margin-top: .9rem; border-bottom: 1px solid var(--line);
+}
+.fat-coluna {
+  position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  background: transparent; border: 0; padding: 0; cursor: pointer; border-radius: 4px 4px 0 0; min-width: 0;
+}
+.fat-coluna:hover, .fat-coluna.foco, .fat-coluna:focus-visible { background: rgba(245, 236, 216, .05); outline: none; }
+.fat-barra {
+  width: min(70%, 28px); background: var(--brass); border-radius: 4px 4px 0 0; transition: height .25s;
+}
+.fat-coluna.foco .fat-barra { filter: brightness(1.15); }
+.fat-eixo {
+  position: absolute; bottom: -1.35rem; font-size: .7rem; color: var(--muted); white-space: nowrap;
+}
+.fat-maximo { margin-top: 1.7rem; font-size: .75rem; color: var(--muted); }
+
+.fat-servicos table, .fat-tabela table { width: 100%; border-collapse: collapse; margin-top: .6rem; font-variant-numeric: tabular-nums; }
+.fat-servicos th, .fat-servicos td, .fat-tabela th, .fat-tabela td {
+  text-align: left; padding: .5rem .25rem; border-bottom: 1px solid var(--line); font-size: .9rem;
+}
+.fat-servicos th, .fat-tabela th { color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+.fat-servicos td:not(:first-child), .fat-servicos th:not(:first-child),
+.fat-tabela td:not(:first-child), .fat-tabela th:not(:first-child) { text-align: right; }
+.fat-tabela summary { cursor: pointer; color: var(--brass); font-weight: 600; }
+.fat-nota { margin-top: 1rem; font-size: .8rem; color: var(--muted); }
+.fat-conteudo .vazio { color: var(--muted); margin-top: .6rem; }
+
+@media (max-width: 700px) {
+  .fat-tiles { grid-template-columns: 1fr 1fr; }
+  .fat-tile.principal, .fat-tile:last-child { grid-column: 1 / -1; }
+  .fat-valor { font-size: 1.2rem; }
+  .fat-barras { height: 150px; }
+}

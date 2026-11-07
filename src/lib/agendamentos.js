@@ -129,6 +129,18 @@ export async function listarPorDia(data) {
   return snap.docs.map(mapear);
 }
 
+// Todos os agendamentos de um período [inicio, fim) — usado no Faturamento.
+// Um único filtro de intervalo em dataHora (não exige índice composto).
+export async function listarPeriodo(inicio, fim) {
+  const snap = await comTimeout(getDocs(query(
+    collection(db, COL),
+    where('dataHora', '>=', Timestamp.fromDate(inicio)),
+    where('dataHora', '<', Timestamp.fromDate(fim)),
+    orderBy('dataHora'),
+  )), 20000);
+  return snap.docs.map(mapear);
+}
+
 // Próximos agendamentos (de hoje em diante), em PÁGINAS. É o que o painel
 // mostra quando nenhuma data está escolhida. Em vez de baixar o histórico
 // inteiro, traz "tamanho" por vez; "cursor" é o último documento da página
