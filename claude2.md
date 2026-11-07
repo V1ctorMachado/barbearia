@@ -74,6 +74,22 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     Texto editável em `MENSAGEM_CONFIRMACAO` (`src/lib/dados.js`). O envio
     é manual (o wa.me só preenche); envio automático exigiria a API oficial
     do WhatsApp Business. Testado no emulador.
+16. **Travamento no celular** (ao confirmar o agendamento e depois "Carregando…"
+    infinito, mesmo limpando o cache). O site em si funcionou no teste em
+    celular simulado (build de produção). Causa provável: a conexão contínua
+    (streaming) do Firestore fica "aberta" sem respostas em algumas redes
+    móveis/proxies/antivírus, e o site esperava sem limite. Correções:
+    - **long polling** forçado (`src/lib/firebase.js`);
+    - **limite de tempo** em todas as operações (`src/lib/tempo.js`:
+      10 s leitura / 15 s gravação), com mensagens claras;
+    - tela **"Sem conexão" + "Tentar novamente"** no lugar do "Carregando…"
+      infinito; login e cadastro também com limite;
+    - recarga automática se um arquivo do painel falhar ao baixar após
+      republicar o site.
+    Testado bloqueando o Firestore: mensagem em 15 s ao confirmar, tela de
+    conexão em 11 s, recupera ao voltar a conexão.
+    **Se voltar a acontecer:** anotar celular, navegador e rede (Wi-Fi/4G),
+    e testar em outra rede e no computador.
 
 ---
 

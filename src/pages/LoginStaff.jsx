@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { traduzErroAuth } from '../lib/erros';
 
 export default function LoginStaff() {
-  const { entrar, usuario, ehStaff, carregando } = useAuth();
+  const { entrar, usuario, ehStaff, carregando, semConexao } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -17,13 +17,16 @@ export default function LoginStaff() {
   // se o usuário é staff (o que jogava a equipe para o portal do cliente).
   useEffect(() => {
     if (!tentouEntrar || carregando) return; // espera a checagem terminar
-    if (usuario && ehStaff) {
+    if (semConexao) {
+      setErro('O servidor não respondeu. Verifique a internet ou troque de rede (Wi-Fi ↔ dados móveis).');
+      setEnviando(false);
+    } else if (usuario && ehStaff) {
       navigate('/painel');          // é da equipe → painel
     } else if (usuario && !ehStaff) {
       setErro('Esta conta não tem acesso de equipe.');
       setEnviando(false);
     }
-  }, [tentouEntrar, carregando, usuario, ehStaff, navigate]);
+  }, [tentouEntrar, carregando, usuario, ehStaff, semConexao, navigate]);
 
   async function enviar(e) {
     e.preventDefault();

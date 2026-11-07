@@ -152,3 +152,8 @@ input[type="date"], input[type="datetime-local"] { color-scheme: dark; }
   width: 100%; max-width: 240px; height: auto; display: block;
   margin: 0 auto 1rem;
 }
+
+/* Tela "Sem conexão" */
+.sem-conexao { flex-direction: column; gap: .75rem; text-align: center; padding: 1.5rem; }
+.sem-conexao p { margin: 0; max-width: 32rem; }
+.sem-conexao .btn { margin-top: .5rem; }

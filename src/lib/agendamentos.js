@@ -3,6 +3,7 @@ import {
   orderBy, limit, startAfter, Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { comTimeout, TEMPO_GRAVACAO } from './tempo';
 import { servicoPorId, periodosDoDia } from './dados';
 import { dataLocalDeISO, ehDataPassada, hojeISO } from './datas';
 import { lerConfig, dataBloqueada } from './config';
@@ -46,7 +47,7 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
   const refPriv = doc(collection(db, COL));            // id novo, automático
   const id = refPriv.id;
 
-  await runTransaction(db, async (tx) => {
+  await comTimeout(runTransaction(db, async (tx) => {
     // Verifica se o horário já está ocupado (documento público já existe).
     const jaExiste = await tx.get(refPub);
     if (jaExiste.exists()) {
@@ -81,7 +82,7 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
       status: 'pendente',
       agendamentoId: id,
     });
-  });
+  }), TEMPO_GRAVACAO);
 
   return { id };
 }
@@ -104,7 +105,7 @@ export async function listarPorCliente(clienteUid) {
     collection(db, COL),
     where('clienteUid', '==', clienteUid),
   );
-  const snap = await getDocs(q);
+  const snap = await comTimeout(getDocs(q));
   return snap.docs
     .map(mapear)
     .sort((a, b) => b.dataHora - a.dataHora); // mais recentes primeiro
@@ -119,12 +120,12 @@ export async function listarPorDia(data) {
   inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio);  fim.setDate(fim.getDate() + 1);
 
-  const snap = await getDocs(query(
+  const snap = await comTimeout(getDocs(query(
     collection(db, COL),
     where('dataHora', '>=', Timestamp.fromDate(inicio)),
     where('dataHora', '<', Timestamp.fromDate(fim)),
     orderBy('dataHora'),
-  ));
+  )));
   return snap.docs.map(mapear);
 }
 
@@ -144,7 +145,7 @@ export async function listarProximos(cursor = null, tamanho = TAMANHO_PAGINA) {
   if (cursor) partes.push(startAfter(cursor));
   partes.push(limit(tamanho + 1)); // +1 só para saber se há mais páginas
 
-  const snap = await getDocs(query(...partes));
+  const snap = await comTimeout(getDocs(query(...partes)));
   const docs = snap.docs.slice(0, tamanho);
   return {
     itens: docs.map(mapear),
@@ -162,7 +163,7 @@ export async function excluirAgendamento(ag) {
   const refPub = doc(db, COL_PUB, pubId);
 
   let pub = null;
-  try { pub = await getDoc(refPub); } catch { /* sem ocupação — segue */ }
+  pub = await comTimeout(getDoc(refPub)).catch((e) => { if (e.code === 'TEMPO_ESGOTADO') throw e; return null; });
 
   const lote = writeBatch(db);
   lote.delete(refPriv);
@@ -170,7 +171,7 @@ export async function excluirAgendamento(ag) {
   if (pub?.exists() && (pub.data().agendamentoId ?? pubId) === ag.id) {
     lote.delete(refPub);
   }
-  await lote.commit();
+  await comTimeout(lote.commit(), TEMPO_GRAVACAO);
 }
 
 // Atualiza o status nas DUAS gavetas (privada e pública) de uma vez só.
@@ -182,7 +183,7 @@ export async function atualizarStatus(ag, status) {
   const refPub = doc(db, COL_PUB, pubId);
 
   let pub = null;
-  try { pub = await getDoc(refPub); } catch { /* sem ocupação — segue */ }
+  pub = await comTimeout(getDoc(refPub)).catch((e) => { if (e.code === 'TEMPO_ESGOTADO') throw e; return null; });
 
   const lote = writeBatch(db);
   lote.update(refPriv, { status });
@@ -191,21 +192,12 @@ export async function atualizarStatus(ag, status) {
   if (pub?.exists() && (pub.data().agendamentoId ?? pubId) === ag.id) {
     lote.update(refPub, { status });
   }
-  await lote.commit();
+  await comTimeout(lote.commit(), TEMPO_GRAVACAO);
 }
 
 // Lê as OCUPAÇÕES (gaveta pública) de um barbeiro num dia. Não traz
 // nenhum dado pessoal — só horário e duração. É o que o cálculo de
 // horários usa, para não precisar ler os dados privados dos clientes.
-// Corre uma promessa contra um tempo limite. Se estourar, rejeita —
-// assim a busca nunca fica "pendurada" para sempre.
-function comTimeout(promessa, ms = 10000) {
-  return Promise.race([
-    promessa,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo esgotado ao consultar o servidor.')), ms)),
-  ]);
-}
-
 async function ocupacoesDoDia(barbeiroId, dataDate) {
   const inicio = new Date(dataDate); inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio); fim.setDate(fim.getDate() + 1);

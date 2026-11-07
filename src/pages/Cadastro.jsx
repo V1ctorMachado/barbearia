@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { comTimeout, TEMPO_GRAVACAO } from '../lib/tempo';
 import { useAuth } from '../context/AuthContext';
 import { traduzErroAuth } from '../lib/erros';
 
@@ -28,12 +29,12 @@ export default function Cadastro() {
     try {
       const cred = await cadastrar(email, senha);
       // Guarda o perfil do cliente (nome e telefone aparecem no painel da equipe).
-      await setDoc(doc(db, 'clientes', cred.user.uid), {
+      await comTimeout(setDoc(doc(db, 'clientes', cred.user.uid), {
         nome: nome.trim(),
         email,
         telefone,
         criadoEm: new Date(),
-      });
+      }), TEMPO_GRAVACAO);
       navigate('/');
     } catch (err) {
       setErro(traduzErroAuth(err.code));

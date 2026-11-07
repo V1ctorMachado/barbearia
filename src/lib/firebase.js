@@ -16,7 +16,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            || 'COLE_SEU_API_KEY',
@@ -30,7 +30,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Long polling: usa requisições HTTP comuns em vez de uma conexão contínua
+// (streaming). Em algumas redes móveis, proxies e antivírus, o streaming fica
+// "aberto" sem entregar respostas e o site trava. Para o volume de uma
+// barbearia, a diferença de velocidade é imperceptível.
+export const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
 // Modo de teste local: com VITE_USE_EMULATOR=true no .env.local, o site usa
 // o emulador do Firebase (firebase emulators:start) em vez do projeto real.

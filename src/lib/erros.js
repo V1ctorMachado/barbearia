@@ -11,6 +11,7 @@ export function traduzErroAuth(codigo) {
     'auth/weak-password': 'A senha deve ter ao menos 6 caracteres.',
     'auth/too-many-requests': 'Muitas tentativas. Tente novamente em alguns minutos.',
     'auth/network-request-failed': 'Falha de conexão. Verifique sua internet.',
+    'TEMPO_ESGOTADO': 'O servidor não respondeu. Verifique a internet ou troque de rede (Wi-Fi ↔ dados móveis).',
   };
   return mapa[codigo] || 'Algo deu errado. Tente novamente.';
 }

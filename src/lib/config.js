@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { comTimeout, TEMPO_GRAVACAO } from './tempo';
 
 // ─────────────────────────────────────────────────────────────
 //  Configurações da barbearia que o Stevon controla pelo painel.
@@ -22,7 +23,7 @@ const PADRAO = {
 // Lê as configurações (devolve os padrões se ainda não existir).
 export async function lerConfig() {
   try {
-    const snap = await getDoc(REF());
+    const snap = await comTimeout(getDoc(REF()));
     return snap.exists() ? { ...PADRAO, ...snap.data() } : { ...PADRAO };
   } catch {
     return { ...PADRAO };
@@ -31,7 +32,7 @@ export async function lerConfig() {
 
 // Salva as configurações (merge: não apaga campos não enviados).
 export async function salvarConfig(dados) {
-  await setDoc(REF(), dados, { merge: true });
+  await comTimeout(setDoc(REF(), dados, { merge: true }), TEMPO_GRAVACAO);
 }
 
 // Deixa só os dígitos de um telefone (para montar o link do WhatsApp).

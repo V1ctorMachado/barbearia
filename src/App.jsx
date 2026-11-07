@@ -14,9 +14,22 @@ import './pages/Configuracoes.css';
 
 // Telas da equipe: só são baixadas quando alguém entra nelas.
 // O cliente não precisa carregar esse código.
-const LoginStaff = lazy(() => import('./pages/LoginStaff'));
-const Painel = lazy(() => import('./pages/Painel'));
-const Configuracoes = lazy(() => import('./pages/Configuracoes'));
+// Se o arquivo não baixar (ex.: o site foi republicado e o navegador ainda
+// tinha a versão antiga aberta), recarrega a página uma vez.
+function lazyComRecarga(importar) {
+  return lazy(() => importar().then((m) => {
+    try { sessionStorage.removeItem('recarregou'); } catch { /* sem storage */ }
+    return m;
+  }).catch((erro) => {
+    let jaTentou = false;
+    try { jaTentou = sessionStorage.getItem('recarregou') === '1'; sessionStorage.setItem('recarregou', '1'); } catch { /* sem storage */ }
+    if (!jaTentou) { window.location.reload(); return new Promise(() => {}); }
+    throw erro;
+  }));
+}
+const LoginStaff = lazyComRecarga(() => import('./pages/LoginStaff'));
+const Painel = lazyComRecarga(() => import('./pages/Painel'));
+const Configuracoes = lazyComRecarga(() => import('./pages/Configuracoes'));
 
 export default function App() {
   return (

@@ -108,6 +108,9 @@ export default function Portal() {
         setErro('Esse horário acabou de ser reservado por outra pessoa. Escolha outro, por favor.');
         setHorarioSel(null);
         buscarHorarios({ manterErro: true }); // recarrega para tirar o horário que ficou ocupado
+      } else if (e?.code === 'TEMPO_ESGOTADO') {
+        // O pedido PODE ter sido gravado mesmo sem resposta. Evita duplicar.
+        setErro('O servidor demorou para responder. Antes de tentar de novo, confira em "Meus agendamentos" se o pedido já entrou. Se o problema continuar, troque de rede (Wi-Fi ↔ dados móveis).');
       } else {
         console.error('Erro ao agendar:', e);
         setErro('Não foi possível agendar. Tente de novo.');
