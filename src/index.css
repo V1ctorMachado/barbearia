@@ -174,3 +174,4 @@ input[type="date"], input[type="datetime-local"] { color-scheme: dark; }
 .aviso-enviado.mini { display: inline-block; margin: 0; padding: .3rem .5rem; font-size: .75rem; white-space: nowrap; }
 
 .rodape.dica { margin-top: .4rem; font-size: .78rem; opacity: .75; }
+.link-reabrir { display: inline-block; margin-top: .25rem; font-size: .85rem; color: var(--brass); text-decoration: underline; }

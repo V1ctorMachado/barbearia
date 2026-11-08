@@ -114,6 +114,16 @@
   font-family: inherit; transition: background .15s;
 }
 .btn-cancelar:hover { background: rgba(178,59,59,.15); }
+/* Selo "Aviso enviado!" no canto de cima do card */
+.meu-info { position: relative; }
+.selo-aviso {
+  position: absolute; top: .7rem; right: .8rem;
+  font-size: .72rem; font-weight: 700; color: #a7d3a7; white-space: nowrap;
+  border: 1px dashed var(--green); border-radius: 6px; padding: .2rem .45rem;
+}
+/* Ações do card (Avisar / Cancelar) */
+.meu-acoes { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: flex-end; }
+.meu-acoes > * { white-space: nowrap; }
 
 .vazio { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
 
@@ -122,7 +132,13 @@
   .topbar { flex-wrap: wrap; }
   .meu-card { flex-wrap: wrap; }
   .meu-lado { border-left: none; border-top: 1px solid var(--line); width: 100%;
-    flex-direction: row; justify-content: space-between; align-items: center; }
+    flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem; }
+  /* No celular, as ações descem para uma linha própria, dividindo a largura. */
+  .meu-acoes { width: 100%; flex-wrap: nowrap; }
+  .meu-acoes > * {
+    flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
+    padding: .55rem .5rem; font-size: .85rem; text-align: center; margin: 0; box-sizing: border-box;
+  }
 }
 
 /* Faixa de aviso do topo (recado do Stevon) */

@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia, mensagemAvisoBarbearia } from '../lib/dados';
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus, marcarAvisoEnviado } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
-import { lerConfig, dataBloqueada, linkWhatsApp } from '../lib/config';
+import { lerConfig, dataBloqueada, linkWhatsApp, linkWhatsAppApp, ehCelular } from '../lib/config';
 import { ehEmailDeCelular, celularDoEmail, formatarCelular, identificacao } from '../lib/celular';
 import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Portal.css';
@@ -119,15 +119,23 @@ export default function Portal() {
     }
   }
 
+  // Chama o app do WhatsApp sem sair da página (link whatsapp://).
+  function abrirAppWhatsApp(link) {
+    window.__ultimoWhatsApp = link; // usado só em testes
+    window.location.href = link;
+  }
+
   async function confirmar() {
     if (!horarioSel) { setErro('Escolha um horário.'); return; }
 
-    // Abre a aba do WhatsApp JÁ, no toque do botão: navegadores bloqueiam
-    // janelas abertas depois de uma espera (a gravação do agendamento).
-    // Ela recebe o link do WhatsApp quando o agendamento for confirmado,
-    // ou é fechada se der erro.
+    // CELULAR: depois de gravar, chama o aplicativo do WhatsApp direto
+    // (whatsapp://), sem abrir aba nova. Ao voltar, o cliente está no site.
+    // COMPUTADOR: abre a aba JÁ, no toque do botão (navegadores bloqueiam
+    // janelas abertas depois de uma espera); ela recebe o WhatsApp Web quando
+    // o agendamento for confirmado, ou é fechada se der erro.
+    const celular = ehCelular();
     let janela = null;
-    if (linkWhatsApp(whatsBarbearia)) {
+    if (!celular && linkWhatsApp(whatsBarbearia)) {
       try {
         janela = window.open('', '_blank');
         if (janela) {
@@ -158,8 +166,12 @@ export default function Portal() {
         servicoNome: servico?.nome, preco: servico?.preco, dataHora: horarioSel,
       };
       setUltimo(agNovo);
-      // Leva a aba aberta para o WhatsApp da barbearia com o aviso pronto.
-      if (janela && !janela.closed) {
+      // Leva para o WhatsApp da barbearia com o aviso pronto.
+      if (celular && linkWhatsApp(whatsBarbearia)) {
+        abrirAppWhatsApp(linkWhatsAppApp(whatsBarbearia, mensagemAvisoBarbearia(agNovo)));
+        registrarAviso(agNovo);
+        setAbriuWhats(true);
+      } else if (janela && !janela.closed) {
         janela.location.href = linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia(agNovo));
         registrarAviso(agNovo);
         setAbriuWhats(true);
@@ -244,10 +256,17 @@ export default function Portal() {
               {ultimo && linkWhatsApp(whatsBarbearia) && (
                 <>
                   {abriuWhats ? (
-                    <p className="aviso-whats-dica">
-                      Abrimos o WhatsApp da barbearia com o aviso pronto.
-                      <strong> Toque em Enviar</strong> para a barbearia receber.
-                    </p>
+                    <>
+                      <p className="aviso-whats-dica">
+                        Abrimos o WhatsApp da barbearia com o aviso pronto.
+                        <strong> Toque em Enviar</strong> para a barbearia receber.
+                      </p>
+                      {ehCelular() && (
+                        <a className="link-reabrir" href={linkWhatsAppApp(whatsBarbearia, mensagemAvisoBarbearia(ultimo))}>
+                          O WhatsApp não abriu? Toque aqui
+                        </a>
+                      )}
+                    </>
                   ) : (
                     <>
                       {!jaAvisou(ultimo) && <p className="aviso-whats-dica">Para agilizar a confirmação, avise a barbearia:</p>}
@@ -342,17 +361,25 @@ export default function Portal() {
               <article key={ag.id} className={`meu-card st-${ag.status}`}>
                 <div className="faixa" />
                 <div className="meu-info">
+                  {/* Selo no canto de cima: libera espaço para o Cancelar embaixo */}
+                  {ag.status === 'pendente' && jaAvisou(ag) && (
+                    <span className="selo-aviso">✅ Aviso enviado!</span>
+                  )}
                   <span className="meu-data">{fmtDataHora(ag.dataHora)}</span>
                   <strong>{ag.servicoNome}</strong>
                 </div>
                 <div className="meu-lado">
                   <span className="meu-status">{STATUS_LABEL[ag.status]}</span>
                   <span className="meu-preco">{brl(ag.preco)}</span>
-                  {ag.status === 'pendente' && linkWhatsApp(whatsBarbearia) && (
-                    <BotaoAvisar ag={{ ...ag, clienteNome: ag.clienteNome || clienteNome }} mini />
-                  )}
-                  {podeCancelar(ag.status) && (
-                    <button className="btn-cancelar" onClick={() => cancelar(ag)}>Cancelar</button>
+                  {(podeCancelar(ag.status) || (ag.status === 'pendente' && !jaAvisou(ag) && linkWhatsApp(whatsBarbearia))) && (
+                    <div className="meu-acoes">
+                      {ag.status === 'pendente' && !jaAvisou(ag) && linkWhatsApp(whatsBarbearia) && (
+                        <BotaoAvisar ag={{ ...ag, clienteNome: ag.clienteNome || clienteNome }} mini />
+                      )}
+                      {podeCancelar(ag.status) && (
+                        <button className="btn-cancelar" onClick={() => cancelar(ag)}>Cancelar</button>
+                      )}
+                    </div>
                   )}
                 </div>
               </article>

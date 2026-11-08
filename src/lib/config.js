@@ -42,6 +42,18 @@ export function soDigitos(texto) {
 
 // Monta o link do WhatsApp a partir do número configurado.
 // Retorna null se não houver número (aí o botão não aparece).
+// Link que abre o APLICATIVO do WhatsApp direto (celular). Diferente do
+// wa.me, não troca a página atual: ao voltar, o cliente continua no site.
+export function linkWhatsAppApp(numero, mensagem = '') {
+  const n = soDigitos(numero);
+  if (!n) return null;
+  const completo = n.length <= 11 ? `55${n}` : n;
+  return `whatsapp://send?phone=${completo}${mensagem ? `&text=${encodeURIComponent(mensagem)}` : ''}`;
+}
+
+export const ehCelular = () =>
+  typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
 export function linkWhatsApp(numero, mensagem = '') {
   const n = soDigitos(numero);
   if (!n) return null;

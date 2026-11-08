@@ -1,0 +1,13 @@
+{
+  "name": "migrar-logins",
+  "private": true,
+  "type": "module",
+  "description": "Migração única: contas antigas (e-mail) passam a entrar com celular + mesma senha.",
+  "scripts": {
+    "simular": "node migrar.mjs",
+    "aplicar": "node migrar.mjs --aplicar"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}

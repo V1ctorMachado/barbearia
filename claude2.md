@@ -8,12 +8,27 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
 ## 1. Situação atual (07/11/2026)
 
 - **Stack:** React 18 + Vite · Firebase Auth + Firestore · hospedagem Vercel.
+- **Pasta no PC do Victor:** `C:\dev\stevon` (sincronizada em 08/11/2026; alterações
+  passam a ser gravadas direto nela).
 - **Status:** fase de testes. Botão 🗑 de excluir ligado no painel (`PERMITIR_EXCLUIR = true`).
 - **Comercial:** sistema oferecido ao barbeiro por **R$ 1.500 (pagamento único)**
   ou R$ 45/mês. Acordo formal: **sem cobrança de manutenção** (erros, lentidão,
   problemas). Sugerido deixar por escrito o que é manutenção × recurso novo.
 
+### Combinados com o Victor
+- **Sempre avisar de forma destacada quando uma alteração mexer nas regras do
+  Firebase (`firestore.rules`)**, para ele publicar as regras junto com o site.
+- Arquivos alterados são gravados direto em `C:\dev\stevon`.
+- Mensagens de WhatsApp sem emojis (alguns aparelhos mostram "?").
+
 ### Pendências
+- [x] ~~Rodar a migração de logins antigos~~ — feita em 08/11 (19 contas).
+- [ ] **Apagar `scripts/migrar-logins/chave-servico.json` do PC** e revogar a
+      chave no Console (Configurações do projeto → Contas de serviço).
+- [x] ~~8 contas antigas sem telefone~~ — excluídas em 08/11 (sem cadastro,
+      sem agendamentos, nenhuma da equipe).
+- [ ] Conta de teste `123@hotmail.com` (usa o número do Stevon) ficou de fora;
+      excluir quando quiser.
 - [ ] Trocar `PERMITIR_EXCLUIR` para `false` antes de abrir para clientes.
 - [ ] Confirmar duração da **Pigmentação avulsa** (hoje 20 min).
 - [ ] Se fechar pagamento único: migrar hospedagem para **Firebase Hosting**
@@ -169,6 +184,57 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     cliente ainda precisa tocar em Enviar: envio 100% automático só com
     servidor/API oficial. Se der erro, a aba fecha; se o navegador bloquear,
     aparece o botão "Avisar" como plano B. Testado no celular simulado.
+30. **Voltar ao site depois do WhatsApp (celular):** a aba extra ficava em
+    "Abrindo o WhatsApp…" quando o cliente voltava ao navegador. Agora, no
+    celular, o site chama o app direto (`whatsapp://send`), sem aba nova, e
+    a página da barbearia continua com "Pedido enviado". Link "O WhatsApp não
+    abriu? Toque aqui" como reserva. No computador continua abrindo o
+    WhatsApp Web numa aba. Testado (celular e computador simulados).
+31. **Projeto sincronizado no PC** em `C:\dev\stevon`: a pasta estava numa
+    versão anterior (sem login por celular, agendar pela equipe etc.).
+    Conferido que não havia alterações próprias do Victor; 17 arquivos
+    atualizados/criados e os 48 conferidos byte a byte.
+32. **Migração de contas antigas (e-mail → celular):** contas criadas com
+    e-mail não eram achadas pelo login por número (ex.: Victor@gmail.com com
+    telefone 27 988582900). Criado `scripts/migrar-logins` (Admin SDK, plano
+    gratuito, roda uma vez no PC): troca o login para
+    `<celular>@cliente.mageschi.app` usando o telefone do cadastro; **mesma
+    senha, mesma conta, histórico preservado**; equipe não é tocada;
+    conflitos/sem telefone/inválidos ficam de fora e saem no relatório.
+    Modo simulação + aplicação, pode rodar de novo com segurança. Chave de
+    administrador protegida em `.gitignore` e `.vercelignore` (novo).
+    Testado no emulador com 10 contas (Victor entra com o celular + 171083 e
+    vê o histórico). Regras do Firebase: sem mudança.
+33. **Migração executada no Firebase real (08/11)**, rodada pelo Claude com a
+    chave que o Victor colocou na pasta (a chave foi apagada do ambiente do
+    Claude depois). Conflitos resolvidos antes, com os agendamentos
+    transferidos para a conta mantida:
+    - Victor: excluída a conta nova vazia `27988582900@...` (o Corte +
+      Pigmentação de teste, 25/12/2027, foi para a conta antiga, que migrou).
+    - Renan: mantida `renanrs.2014@hotmail.com`; excluída a `.con`; o Corte
+      de 06/11 foi transferido.
+    - Weylon: mantida `weylonnrodrigues` (a mais recente, com o Corte de
+      14/11); excluída `weylonrodrigues`.
+    - Conta de teste `123@hotmail.com` pulada (`--pular`).
+    Resultado: **19 migradas, 0 falhas**; 8 sem telefone; 2 equipe.
+    Conferido: login com (27) 98858-2900 + 171083 funciona e o e-mail antigo
+    não; agendamentos nas contas certas. Script ganhou a opção `--pular`.
+34. **Exclusão das 8 contas sem telefone** (pedido do Victor): kak@gmail.com,
+    gabryellehm@gmail.com, kelvenoliveira747@gmail.com, luan@yahoo.com.br,
+    stevon2@hotmail.com (sem ".br"; a da equipe é a .com.br e continua
+    ativa), victormachado123martins@gmail.com, fernando@gmail.com,
+    victormachado@gmail.com. Conferido antes: nenhuma era da equipe, nenhuma
+    tinha cadastro nem agendamento. Total de contas depois: 24 (inclui uma
+    conta nova criada pelo site às 15h11, já no formato por celular).
+35. **Botão "Cancelar" cortado no celular** (Meus agendamentos): o card agora
+    tem duas linhas no celular, com situação + preço em cima e ações
+    ("Avisar"/"Aviso enviado!" e "Cancelar") embaixo, dividindo a largura.
+    Testado em iPhone 13, iPhone SE e computador. Regras: sem mudança.
+36. **Selo "Aviso enviado!" no canto de cima do card** (ao lado da data e do
+    serviço), liberando a linha de baixo para o "Cancelar" ocupar a largura.
+    O botão "Avisar" (ainda não enviado) continua embaixo, ao lado do
+    "Cancelar". Testado em iPhone 13, iPhone SE e computador, sem sobrepor
+    o texto. Regras: sem mudança.
 
 ---
 
