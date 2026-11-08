@@ -1,4 +1,5 @@
 /* ── Faturamento ─────────────────────────────────────────── */
+/* Atenção: .fat-valor também existe no Painel — aqui fica sempre dentro de .fat-tile. */
 .fat-conteudo { max-width: 900px; margin: 0 auto; padding: 0 16px 3rem; }
 
 .fat-filtros { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0 1.25rem; }
@@ -20,7 +21,7 @@
 }
 .fat-tile.principal { border-color: var(--brass-dim); }
 .fat-rotulo { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.fat-valor { font-size: 1.5rem; color: var(--cream); font-variant-numeric: tabular-nums; }
+.fat-tile .fat-valor { font-size: 1.5rem; color: var(--cream); font-variant-numeric: tabular-nums; }
 .fat-tile.principal .fat-valor { color: var(--brass); font-size: 1.9rem; }
 .fat-sub { font-size: .8rem; color: var(--muted); }
 
@@ -72,6 +73,6 @@
 @media (max-width: 700px) {
   .fat-tiles { grid-template-columns: 1fr 1fr; }
   .fat-tile.principal, .fat-tile:last-child { grid-column: 1 / -1; }
-  .fat-valor { font-size: 1.2rem; }
+  .fat-tile .fat-valor { font-size: 1.2rem; }
   .fat-barras { height: 150px; }
 }

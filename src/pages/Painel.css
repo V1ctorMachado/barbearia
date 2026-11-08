@@ -135,3 +135,41 @@
 /* Botão de excluir (fase de testes) — discreto, em vermelho */
 .acoes button.excluir { color: var(--red-pole); border-style: dashed; }
 .acoes button.excluir:hover { background: rgba(178,59,59,.15); }
+
+/* ── Agendar cliente (equipe) ───────────────────────────── */
+.btn-agendar { white-space: nowrap; }
+.modal-fundo {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 1rem; overflow-y: auto;
+}
+.modal {
+  width: 100%; max-width: 460px; margin: 2rem 0; background: var(--panel);
+  border: 1px solid var(--brass-dim); border-radius: 10px; padding: 1.25rem;
+}
+.modal-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.modal-topo h2 {
+  margin: 0; font-family: 'Oswald', sans-serif; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--brass); font-size: 1.2rem;
+}
+.modal-fechar { background: none; border: 0; color: var(--muted); font-size: 1.6rem; cursor: pointer; line-height: 1; }
+.modal-linha { display: flex; gap: .5rem; }
+.modal-linha input { flex: 1; min-width: 0; }
+.modal-horas { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: .4rem; }
+.modal-hora {
+  background: var(--ink); border: 1px solid var(--line); color: var(--cream);
+  padding: .55rem 0; border-radius: 5px; cursor: pointer; font: inherit; font-variant-numeric: tabular-nums;
+}
+.modal-hora:hover { border-color: var(--brass-dim); }
+.modal-hora.sel { border-color: var(--brass); background: rgba(201,162,75,.15); color: var(--brass); }
+.modal-vazio { color: var(--muted); margin: 0; font-size: .9rem; }
+.modal-resumo {
+  margin: .25rem 0 1rem; padding: .7rem .8rem; border-radius: 6px; font-size: .9rem;
+  background: rgba(201,162,75,.08); border: 1px solid var(--brass-dim); color: var(--cream);
+}
+.modal-acoes { display: flex; gap: .6rem; justify-content: flex-end; }
+@media (max-width: 600px) {
+  .modal { margin: .5rem 0; }
+  .modal-acoes { flex-direction: column-reverse; }
+  .modal-acoes button { width: 100%; }
+}

@@ -37,7 +37,7 @@ function idDoHorario(barbeiroId, dataHora) {
 // Usa uma transação: só cria se o horário (documento em 'ocupacoes' com id
 // determinístico) ainda não existir. Se duas pessoas tentarem o mesmo horário
 // ao mesmo tempo, apenas uma consegue; a outra recebe erro de "horário ocupado".
-export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, barbeiroId, servicoId, dataHora }) {
+export async function criarAgendamento({ clienteUid, clienteEmail, clienteTelefone, clienteNome, barbeiroId, servicoId, dataHora }) {
   const servico = servicoPorId(servicoId);
   if (!servico) throw new Error('Serviço inválido.');
 
@@ -61,7 +61,8 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
     // Gaveta privada — dados completos.
     tx.set(refPriv, {
       clienteUid,
-      clienteEmail,
+      clienteEmail: clienteEmail || '',
+      clienteTelefone: clienteTelefone || '',
       clienteNome: clienteNome || '',
       barbeiroId,
       servicoId,
@@ -80,6 +81,53 @@ export async function criarAgendamento({ clienteUid, clienteEmail, clienteNome, 
       dataHora: ts,
       duracaoMin: servico.duracaoMin,
       status: 'pendente',
+      agendamentoId: id,
+    });
+  }), TEMPO_GRAVACAO);
+
+  return { id };
+}
+
+// Agendamento feito PELA EQUIPE no painel (cliente de balcão / WhatsApp).
+// O cliente não tem conta: grava nome e telefone, sem clienteUid.
+// Já entra como "agendado" (a própria equipe marcou).
+export async function criarAgendamentoEquipe({ clienteNome, clienteTelefone, barbeiroId, servicoId, dataHora, criadoPor }) {
+  const servico = servicoPorId(servicoId);
+  if (!servico) throw new Error('Serviço inválido.');
+
+  const ts = Timestamp.fromDate(new Date(dataHora));
+  const ocupacaoId = idDoHorario(barbeiroId, dataHora);
+  const refPub = doc(db, COL_PUB, ocupacaoId);
+  const refPriv = doc(collection(db, COL));
+  const id = refPriv.id;
+
+  await comTimeout(runTransaction(db, async (tx) => {
+    const jaExiste = await tx.get(refPub);
+    if (jaExiste.exists() && !['cancelado', 'recusado'].includes(jaExiste.data().status)) {
+      throw new Error('HORARIO_OCUPADO');
+    }
+    tx.set(refPriv, {
+      clienteUid: '',
+      clienteEmail: '',
+      clienteTelefone: clienteTelefone || '',
+      clienteNome: clienteNome || '',
+      barbeiroId,
+      servicoId,
+      servicoNome: servico.nome,
+      duracaoMin: servico.duracaoMin,
+      preco: servico.preco,
+      dataHora: ts,
+      status: 'agendado',
+      origem: 'equipe',
+      criadoPor: criadoPor || '',
+      ocupacaoId,
+      criadoEm: serverTimestamp(),
+    });
+    tx.set(refPub, {
+      barbeiroId,
+      dataHora: ts,
+      duracaoMin: servico.duracaoMin,
+      status: 'agendado',
       agendamentoId: id,
     });
   }), TEMPO_GRAVACAO);

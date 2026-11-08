@@ -124,6 +124,52 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     tela inicial (`apple-touch-icon` 180, `icon-192`, `icon-512`, com
     `site.webmanifest`). Links em `index.html`.
 
+### 08/11/2026
+23. **Login sem e-mail:** cliente se cadastra com **nome + celular + senha** e
+    entra com **celular + senha** (escolhido entre: só nome+celular, SMS ou
+    senha). Por baixo: e-mail interno `<número>@cliente.mageschi.app`
+    (`src/lib/celular.js`). Máscara do número, aceita +55 colado. Contas
+    antigas com e-mail continuam entrando. Agendamento grava
+    `clienteTelefone`; o painel não mostra o e-mail interno. Equipe continua
+    com e-mail. Regras sem mudança. Limitação: sem recuperação de senha
+    (excluir a conta e recadastrar). Testado no emulador (11 verificações).
+24. **Recuperação de senha:** SMS descartado (exige Blaze, ~US$ 0,05/SMS).
+    Escolhida a **opção manual**: no login, "Esqueceu a senha?" abre o
+    WhatsApp da barbearia com a mensagem pronta; a equipe confere o número,
+    exclui a conta no Firebase e o cliente se recadastra (passo a passo no
+    FIREBASE.md). Evolução possível sem Blaze: botão "Gerar senha temporária"
+    no painel via Cloudflare Worker.
+25. O link "Esqueceu a senha?" passou a ir para o **WhatsApp do suporte
+    (27) 98858-2900** (`WHATSAPP_SUPORTE` em `dados.js`), e não para o do
+    barbeiro. Testado no emulador.
+26. **Agendar cliente pela equipe:** botão "+ Agendar cliente" no painel
+    (janela com nome, celular opcional, serviço, data e horários livres).
+    Grava sem conta (`clienteUid: ''`, `origem: 'equipe'`, `criadoPor`), já
+    como "Agendado", e ocupa o horário. Regras: equipe pode criar sem as
+    validações do cliente. **Regras alteradas: publicar regras + site.**
+    Corrigido também um conflito de CSS (`.fat-valor` da tela de Faturamento
+    afetava o total do painel). Testado: regras (3 novos + 20 anteriores) e
+    tela no computador e no celular.
+27. **Mensagem de confirmação (barbeiro → cliente):** o final "responda ✅ /
+    ❌" foi trocado por "chegue com alguns minutos de antecedência" e "se não
+    puder vir, avise com pelo menos 24 horas de antecedência", seguido de
+    "Até lá!". Texto final definido pelo Victor: sem negrito e sem linhas em
+    branco; se o nome começar com tratamento (Seu, Dona…), a saudação usa o
+    nome seguinte ("Seu Jorge" → "Olá, Jorge!").
+    Incluída a linha "✅ Seu horário está confirmado:" antes da data.
+28. **Emojis removidos das mensagens de WhatsApp** (confirmação do barbeiro e
+    aviso do cliente): alguns aparelhos mostravam "?" no lugar. Também troquei
+    o travessão por hífen. Rótulos "Data:" e "Serviço:" no lugar dos ícones.
+    Regra para textos futuros: só letras, acentos e pontuação comuns.
+    No aviso do cliente, o nome sai sem tratamento no começo ("Seu Jorge" →
+    "Jorge").
+29. **WhatsApp abre sozinho ao confirmar:** no toque em "Confirmar
+    agendamento", o site abre uma aba e, gravado o pedido, leva para o
+    WhatsApp da barbearia com o aviso pronto (marca "aviso enviado"). O
+    cliente ainda precisa tocar em Enviar: envio 100% automático só com
+    servidor/API oficial. Se der erro, a aba fecha; se o navegador bloquear,
+    aparece o botão "Avisar" como plano B. Testado no celular simulado.
+
 ---
 
 ## 3. Taxas de pagamento (consultadas em 07/11/2026)

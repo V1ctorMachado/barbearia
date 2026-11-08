@@ -5,13 +5,13 @@ import { db } from '../lib/firebase';
 import { comTimeout, TEMPO_GRAVACAO } from '../lib/tempo';
 import { useAuth } from '../context/AuthContext';
 import { traduzErroAuth } from '../lib/erros';
+import { celularValido, emailDoCelular, normalizarCelular, formatarCelular, mascaraCelular } from '../lib/celular';
 
 export default function Cadastro() {
   const { cadastrar } = useAuth();
   const navigate = useNavigate();
   const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefone, setTelefone] = useState('');
+  const [celular, setCelular] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [erro, setErro] = useState('');
@@ -22,22 +22,24 @@ export default function Cadastro() {
     setErro('');
 
     if (!nome.trim()) { setErro('Informe seu nome.'); return; }
+    if (!celularValido(celular)) { setErro('Informe o celular com DDD. Ex.: (27) 99999-8888'); return; }
     if (senha.length < 6) { setErro('A senha deve ter ao menos 6 caracteres.'); return; }
     if (senha !== confirmar) { setErro('As senhas não conferem.'); return; }
 
     setCarregando(true);
     try {
-      const cred = await cadastrar(email, senha);
-      // Guarda o perfil do cliente (nome e telefone aparecem no painel da equipe).
+      // O celular é o "usuário" do login (ver src/lib/celular.js).
+      const cred = await cadastrar(emailDoCelular(celular), senha);
+      // Perfil do cliente (nome e telefone aparecem no painel da equipe).
       await comTimeout(setDoc(doc(db, 'clientes', cred.user.uid), {
         nome: nome.trim(),
-        email,
-        telefone,
+        telefone: formatarCelular(celular),
+        celular: normalizarCelular(celular),
         criadoEm: new Date(),
       }), TEMPO_GRAVACAO);
       navigate('/');
     } catch (err) {
-      setErro(traduzErroAuth(err.code));
+      setErro(traduzErroAuth(err.code, 'celular'));
       setCarregando(false);
     }
   }
@@ -57,14 +59,9 @@ export default function Cadastro() {
                  autoComplete="name" placeholder="seu nome" />
         </div>
         <div className="campo">
-          <label>E-mail</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                 autoComplete="email" placeholder="seu@email.com" />
-        </div>
-        <div className="campo">
-          <label>Telefone</label>
-          <input type="tel" value={telefone} onChange={(e) => setTelefone(e.target.value)}
-                 placeholder="(00) 00000-0000" />
+          <label>Celular (WhatsApp)</label>
+          <input type="tel" inputMode="tel" value={celular} onChange={(e) => setCelular(mascaraCelular(e.target.value))}
+                 autoComplete="tel" placeholder="(27) 99999-8888" />
         </div>
         <div className="campo">
           <label>Senha</label>

@@ -172,3 +172,5 @@ input[type="date"], input[type="datetime-local"] { color-scheme: dark; }
   padding: .6rem; border: 1px dashed var(--green); border-radius: 8px;
 }
 .aviso-enviado.mini { display: inline-block; margin: 0; padding: .3rem .5rem; font-size: .75rem; white-space: nowrap; }
+
+.rodape.dica { margin-top: .4rem; font-size: .78rem; opacity: .75; }

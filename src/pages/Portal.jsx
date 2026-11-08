@@ -7,6 +7,7 @@ import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia, mensagemAvisoBarbearia
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus, marcarAvisoEnviado } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
 import { lerConfig, dataBloqueada, linkWhatsApp } from '../lib/config';
+import { ehEmailDeCelular, celularDoEmail, formatarCelular, identificacao } from '../lib/celular';
 import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Portal.css';
 
@@ -27,6 +28,7 @@ export default function Portal() {
   const [ultimo, setUltimo] = useState(null);
   // Pedidos em que o cliente já tocou em "Avisar" (vale na hora, antes do servidor responder).
   const [avisados, setAvisados] = useState(() => new Set());
+  const [abriuWhats, setAbriuWhats] = useState(false); // WhatsApp aberto sozinho ao confirmar
 
   const jaAvisou = (ag) => !!ag?.avisoEnviado || avisados.has(ag?.id);
 
@@ -96,7 +98,7 @@ export default function Portal() {
   // Ao trocar serviço ou data, a lista de horários antiga deixa de valer.
   // Sem isso, dava para escolher um horário de outro dia ou com outra duração.
   function limparHorarios() {
-    setHorarios([]); setHorarioSel(null); setBuscou(false); setSucesso(''); setUltimo(null);
+    setHorarios([]); setHorarioSel(null); setBuscou(false); setSucesso(''); setUltimo(null); setAbriuWhats(false);
   }
   function escolherServico(id) { setServicoId(id); limparHorarios(); }
   function escolherData(valor) { setData(valor); limparHorarios(); }
@@ -119,24 +121,52 @@ export default function Portal() {
 
   async function confirmar() {
     if (!horarioSel) { setErro('Escolha um horário.'); return; }
-    setEnviando(true); setErro(''); setSucesso('');
+
+    // Abre a aba do WhatsApp JÁ, no toque do botão: navegadores bloqueiam
+    // janelas abertas depois de uma espera (a gravação do agendamento).
+    // Ela recebe o link do WhatsApp quando o agendamento for confirmado,
+    // ou é fechada se der erro.
+    let janela = null;
+    if (linkWhatsApp(whatsBarbearia)) {
+      try {
+        janela = window.open('', '_blank');
+        if (janela) {
+          janela.document.title = 'Abrindo o WhatsApp…';
+          janela.document.body.innerHTML =
+            '<p style="font-family:sans-serif;padding:2rem;font-size:1.1rem">Abrindo o WhatsApp da barbearia…</p>';
+        }
+      } catch { janela = null; }
+    }
+    const fecharJanela = () => { try { janela?.close(); } catch { /* já fechada */ } };
+
+    setEnviando(true); setErro(''); setSucesso(''); setAbriuWhats(false);
     try {
       const novo = await criarAgendamento({
         clienteUid: usuario.uid,
-        clienteEmail: usuario.email,
+        // E-mail só para contas antigas; contas por celular gravam o telefone.
+        clienteEmail: ehEmailDeCelular(usuario.email) ? '' : usuario.email,
+        clienteTelefone: ehEmailDeCelular(usuario.email) ? formatarCelular(celularDoEmail(usuario.email)) : '',
         clienteNome,
         barbeiroId,
         servicoId,
         dataHora: horarioSel,
       });
       setSucesso('Pedido enviado! Ele fica pendente até a barbearia confirmar.');
-      setUltimo({
+      const agNovo = {
         id: novo.id, status: 'pendente',
-        clienteNome: clienteNome || '', clienteEmail: usuario.email,
+        clienteNome: clienteNome || '', clienteEmail: ehEmailDeCelular(usuario.email) ? '' : usuario.email,
         servicoNome: servico?.nome, preco: servico?.preco, dataHora: horarioSel,
-      });
+      };
+      setUltimo(agNovo);
+      // Leva a aba aberta para o WhatsApp da barbearia com o aviso pronto.
+      if (janela && !janela.closed) {
+        janela.location.href = linkWhatsApp(whatsBarbearia, mensagemAvisoBarbearia(agNovo));
+        registrarAviso(agNovo);
+        setAbriuWhats(true);
+      }
       setHorarios([]); setHorarioSel(null); setBuscou(false);
     } catch (e) {
+      fecharJanela();
       if (e?.message === 'HORARIO_OCUPADO') {
         // Alguém pegou esse horário primeiro. Avisa e atualiza a lista.
         setErro('Esse horário acabou de ser reservado por outra pessoa. Escolha outro, por favor.');
@@ -188,7 +218,7 @@ export default function Portal() {
           <span className="tagline">Agende seu horário</span>
         </div>
         <div className="usuario-box">
-          <span className="usuario-nome">{usuario?.email}</span>
+          <span className="usuario-nome">{identificacao(usuario, clienteNome)}</span>
           <button className="btn-sair" onClick={sairApp}>Sair</button>
         </div>
       </header>
@@ -213,8 +243,17 @@ export default function Portal() {
               {sucesso}
               {ultimo && linkWhatsApp(whatsBarbearia) && (
                 <>
-                  {!jaAvisou(ultimo) && <p className="aviso-whats-dica">Para agilizar a confirmação, avise a barbearia:</p>}
-                  <BotaoAvisar ag={ultimo} />
+                  {abriuWhats ? (
+                    <p className="aviso-whats-dica">
+                      Abrimos o WhatsApp da barbearia com o aviso pronto.
+                      <strong> Toque em Enviar</strong> para a barbearia receber.
+                    </p>
+                  ) : (
+                    <>
+                      {!jaAvisou(ultimo) && <p className="aviso-whats-dica">Para agilizar a confirmação, avise a barbearia:</p>}
+                      <BotaoAvisar ag={ultimo} />
+                    </>
+                  )}
                 </>
               )}
             </div>

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { STATUS_LABEL, PERMITIR_EXCLUIR, mensagemConfirmacao } from '../lib/dados';
 import { listarPorDia, listarProximos, atualizarStatus, excluirAgendamento } from '../lib/agendamentos';
 import { linkWhatsApp } from '../lib/config';
+import AgendarCliente from '../components/AgendarCliente';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import './Painel.css';
@@ -31,6 +32,8 @@ export default function Painel() {
   const [carregando, setCarregando] = useState(false);
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erro, setErro] = useState('');
+  const [agendando, setAgendando] = useState(false); // janela "Agendar cliente"
+  const [okMsg, setOkMsg] = useState('');
 
   // Paginação (só quando nenhuma data está escolhida).
   const [cursor, setCursor] = useState(null);
@@ -173,6 +176,9 @@ export default function Painel() {
             {FILTROS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
         </div>
+        <button className="btn btn-agendar" onClick={() => { setOkMsg(''); setAgendando(true); }}>
+          + Agendar cliente
+        </button>
         <div className="spacer" />
         <div className="faturamento">
           <span className="fat-label">{data ? 'Faturamento do dia' : 'Faturamento (lista exibida)'}</span>
@@ -181,6 +187,19 @@ export default function Painel() {
       </section>
 
       {erro && <div className="alerta">{erro}</div>}
+      {okMsg && <div className="aviso-ok">{okMsg}</div>}
+
+      {agendando && (
+        <AgendarCliente
+          staffUid={usuario?.uid}
+          onFechar={() => setAgendando(false)}
+          onAgendado={() => {
+            setAgendando(false);
+            setOkMsg('Agendamento criado. Ele já aparece na agenda como "Agendado".');
+            carregar();
+          }}
+        />
+      )}
 
       <main className="lista">
         {carregando && <div className="carregando">Carregando…</div>}
@@ -200,14 +219,14 @@ export default function Painel() {
             </div>
             <div className="card-info">
               <h3>{ag.clienteNome || ag.clienteEmail}</h3>
-              {ag.clienteNome && <p className="cliente-email">{ag.clienteEmail}</p>}
-              {telefones[ag.clienteUid] && (
+              {ag.clienteNome && ag.clienteEmail && <p className="cliente-email">{ag.clienteEmail}</p>}
+              {(telefones[ag.clienteUid] || ag.clienteTelefone) && (
                 <p className="cliente-email">
                   {/* Abre o WhatsApp do cliente com a mensagem de confirmação pronta */}
-                  <a href={linkWhatsApp(telefones[ag.clienteUid], mensagemConfirmacao(ag))}
+                  <a href={linkWhatsApp((telefones[ag.clienteUid] || ag.clienteTelefone), mensagemConfirmacao(ag))}
                      target="_blank" rel="noopener noreferrer"
                      className="cliente-tel" title="Enviar mensagem de confirmação no WhatsApp">
-                    💬 {telefones[ag.clienteUid]}
+                    💬 {(telefones[ag.clienteUid] || ag.clienteTelefone)}
                   </a>
                 </p>
               )}

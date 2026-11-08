@@ -11,8 +11,12 @@ celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
 ## Para o cliente
 
 ### Criar conta e entrar
-- Cadastro com **nome, e-mail, telefone e senha**.
+- Cadastro só com **nome, celular (WhatsApp) e senha**, sem e-mail.
+- Para entrar, basta o **celular e a senha**. O número pode ser digitado de
+  qualquer jeito: com ou sem +55, parênteses ou traço.
 - O login fica salvo no aparelho, então não é preciso entrar toda vez.
+- Esqueceu a senha? O link no login abre o WhatsApp do **suporte**, com a
+  mensagem pronta.
 
 ### Agendar um horário
 1. **Escolhe o serviço**, com o preço e a duração de cada um.
@@ -25,9 +29,10 @@ celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
 4. **Escolhe o horário** e toca em **Confirmar agendamento**.
 5. O pedido entra como **"Aguardando confirmação"** até a barbearia aprovar.
 
-Depois de confirmar, aparece o botão **💬 Avisar a barbearia no WhatsApp**,
-que abre a conversa com a barbearia com o pedido já escrito (nome, serviço,
-valor, dia e horário). Assim a barbearia fica sabendo na hora. O botão
+Ao tocar em **Confirmar agendamento**, o site já **abre o WhatsApp da
+barbearia** com o aviso pronto (nome, serviço, valor, dia e horário). O cliente
+só precisa tocar em **Enviar**. Se o navegador bloquear a abertura, aparece o
+botão **💬 Avisar a barbearia no WhatsApp** como alternativa. O botão
 funciona **uma vez só** por agendamento; depois aparece **"✅ Aviso enviado!"**
 (vale mesmo recarregando a página ou entrando por outro celular).
 
@@ -59,6 +64,17 @@ Acesso por um login separado, **só para quem é da equipe**.
   valor.
 - **Faturamento** somado do dia ou da lista exibida.
 
+### Agendar cliente (balcão ou WhatsApp)
+Botão **+ Agendar cliente** no painel, para marcar horário de quem não usa o
+site:
+- **nome**, **celular** (opcional), **serviço** e **data**;
+- mostra **só os horários livres**, com a mesma regra da tela do cliente;
+- o agendamento já entra como **Agendado** e o horário fica ocupado para os
+  outros clientes na hora.
+
+O cliente não precisa de conta. O agendamento aparece só no painel, com o
+💬 telefone para mandar a mensagem de confirmação.
+
 ### Ações em cada agendamento
 | Ação | Quando |
 |---|---|
@@ -72,8 +88,9 @@ Recusar, cancelar e excluir **pedem confirmação** antes.
 
 ### Mensagem de confirmação no WhatsApp
 Tocar no **💬 telefone do cliente** abre o WhatsApp com uma mensagem pronta:
-agradece o agendamento, mostra o serviço, o dia, o horário e o valor, e pede
-que o cliente responda **✅ para confirmar** ou **❌ se não puder ir**.
+agradece o agendamento, mostra o serviço, o dia, o horário e o valor, pede
+para **chegar com antecedência** e, em caso de desistência, **avisar com 24 horas
+de antecedência**.
 
 ### Faturamento
 Tela **📊 Faturamento**, aberta pelo botão no topo do painel, com visão por

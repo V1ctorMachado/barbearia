@@ -91,19 +91,23 @@ export const PERMITIR_EXCLUIR = true;
 // este texto já escrito. Para mudar o texto, edite MENSAGEM_CONFIRMACAO.
 // Marcadores: {nome} {servico} {dia} {data} {hora} {preco}
 export const MENSAGEM_CONFIRMACAO = [
-  'Olá, {nome}! 👋',
-  'Aqui é da *Barbearia Mageschi*. Obrigado por agendar com a gente! 💈',
-  '',
-  '📅 {dia}, {data} às {hora}',
-  '✂️ {servico} — R$ {preco}',
-  '',
-  'Para *confirmar* seu horário, responda com ✅',
-  'Se *não puder vir*, responda com ❌',
+  // Sem emojis nem travessão: alguns aparelhos mostram "?" no lugar deles.
+  'Olá, {nome}!',
+  'Aqui é da Barbearia Mageschi. Obrigado por agendar com a gente!',
+  'Seu horário está confirmado:',
+  'Data: {dia}, {data} às {hora}',
+  'Serviço: {servico} - R$ {preco}',
+  'Por favor, chegue com alguns minutos de antecedência.',
+  'Se não puder vir, avise com pelo menos 24 horas de antecedência.',
+  'Até lá!',
 ].join('\n');
 
 export function mensagemConfirmacao(ag) {
   const d = ag.dataHora;
-  const primeiroNome = (ag.clienteNome || '').trim().split(/\s+/)[0] || 'tudo bem';
+  // Primeiro nome; se começar com tratamento (Seu, Dona, Dr…), usa o nome seguinte.
+  const partes = (ag.clienteNome || '').trim().split(/\s+/).filter(Boolean);
+  const tratamento = /^(seu|sr\.?|sra\.?|dona|dr\.?|dra\.?|tio|tia)$/i;
+  const primeiroNome = (partes.length > 1 && tratamento.test(partes[0]) ? partes[1] : partes[0]) || 'tudo bem';
   const valores = {
     nome: primeiroNome,
     servico: ag.servicoNome || 'seu serviço',
@@ -120,19 +124,19 @@ export function mensagemConfirmacao(ag) {
 // que abre a conversa com a barbearia com este texto já escrito.
 // Marcadores: {nome} {servico} {dia} {data} {hora} {preco}
 export const MENSAGEM_AVISO_BARBEARIA = [
-  'Olá! Acabei de agendar pelo site 💈',
-  '',
-  '👤 {nome}',
-  '✂️ {servico} — R$ {preco}',
-  '📅 {dia}, {data} às {hora}',
-  '',
+  // Sem emojis nem travessão: alguns aparelhos mostram "?" no lugar deles.
+  'Olá! Acabei de agendar pelo site.',
+  'Nome: {nome}',
+  'Serviço: {servico} - R$ {preco}',
+  'Data: {dia}, {data} às {hora}',
   'Aguardo a confirmação. Obrigado!',
 ].join('\n');
 
 export function mensagemAvisoBarbearia(ag) {
   const d = ag.dataHora;
   const valores = {
-    nome: (ag.clienteNome || '').trim() || ag.clienteEmail || 'Cliente',
+    // Nome completo, sem tratamento no começo ("Seu Jorge Silva" → "Jorge Silva").
+    nome: (ag.clienteNome || '').trim().replace(/^(seu|sr\.?|sra\.?|dona|dr\.?|dra\.?|tio|tia)\s+(?=\S)/i, '') || ag.clienteEmail || 'Cliente',
     servico: ag.servicoNome || 'serviço',
     dia: d.toLocaleDateString('pt-BR', { weekday: 'long' }),
     data: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
@@ -141,3 +145,9 @@ export function mensagemAvisoBarbearia(ag) {
   };
   return MENSAGEM_AVISO_BARBEARIA.replace(/\{(\w+)\}/g, (m, k) => valores[k] ?? m);
 }
+
+// ── Suporte técnico (WhatsApp) ─────────────────────────────────
+// Para onde vai o link "Esqueceu a senha?" do login. É quem tem acesso ao
+// Firebase para excluir a conta (ver FIREBASE.md). Separado do WhatsApp da
+// barbearia (que fica em Configurações e é usado no resto do site).
+export const WHATSAPP_SUPORTE = '27988582900';
