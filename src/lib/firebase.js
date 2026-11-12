@@ -40,7 +40,10 @@ export const db = initializeFirestore(app, { experimentalForceLongPolling: true 
 // o emulador do Firebase (firebase emulators:start) em vez do projeto real.
 // Nunca ligar isso em produção.
 if (import.meta.env.VITE_USE_EMULATOR === 'true') {
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  // Usa o mesmo endereço que abriu o site: no PC é localhost; no celular
+  // (mesmo Wi-Fi) é o IP do computador, ex.: 192.168.0.10.
+  const hostEmu = window.location.hostname || '127.0.0.1';
+  connectAuthEmulator(auth, `http://${hostEmu}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, hostEmu, 8080);
 }
 export default app;

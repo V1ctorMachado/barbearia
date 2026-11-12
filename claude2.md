@@ -8,8 +8,9 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
 ## 1. Situação atual (07/11/2026)
 
 - **Stack:** React 18 + Vite · Firebase Auth + Firestore · hospedagem Vercel.
-- **Pasta no PC do Victor:** `C:\dev\stevon` (sincronizada em 08/11/2026; alterações
-  passam a ser gravadas direto nela).
+- **Pastas no PC do Victor:** `C:\dev\stevon\HML` (homologação, testes) e
+  `C:\dev\stevon\PRD` (produção, publicada na Vercel). Guia em
+  `C:\dev\stevon\AMBIENTES.md`. A cópia antiga na raiz de `stevon` pode ser apagada.
 - **Status:** fase de testes. Botão 🗑 de excluir ligado no painel (`PERMITIR_EXCLUIR = true`).
 - **Comercial:** sistema oferecido ao barbeiro por **R$ 1.500 (pagamento único)**
   ou R$ 45/mês. Acordo formal: **sem cobrança de manutenção** (erros, lentidão,
@@ -18,7 +19,9 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
 ### Combinados com o Victor
 - **Sempre avisar de forma destacada quando uma alteração mexer nas regras do
   Firebase (`firestore.rules`)**, para ele publicar as regras junto com o site.
-- Arquivos alterados são gravados direto em `C:\dev\stevon`.
+- **Fluxo HML → PRD:** toda alteração vai primeiro para `stevon\HML`, é testada
+  (emulador), o Victor aprova, e só então é copiada para `stevon\PRD` (que é
+  a publicada). Nunca gravar direto na PRD sem aprovação.
 - Mensagens de WhatsApp sem emojis (alguns aparelhos mostram "?").
 
 ### Pendências
@@ -235,6 +238,32 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
     O botão "Avisar" (ainda não enviado) continua embaixo, ao lado do
     "Cancelar". Testado em iPhone 13, iPhone SE e computador, sem sobrepor
     o texto. Regras: sem mudança.
+37. **Ambientes HML e PRD** criados em `C:\dev\stevon`: as duas pastas com o
+    projeto completo (idênticas neste momento). HML usa o emulador do
+    Firebase (`env-hml.txt` → `.env.local` via `criar-env-hml.bat`, porque
+    arquivos `.env` não podem ser gravados remotamente); PRD usa o Firebase
+    real (variáveis na Vercel). Guia do fluxo em `stevon\AMBIENTES.md`.
+
+### 09/11/2026
+
+38. **Lembrete na agenda do celular** (HML, aguardando aprovação para PRD).
+    Agendamento para daqui a 3 dias ou mais: a tela de confirmação mostra
+    "Seu horário é daqui a X dias" e o botão "📅 Adicionar à agenda". iPhone:
+    arquivo .ics (Calendário) com aviso no dia, 1 hora antes do
+    horário (pedido do Victor; antes eram 1 dia e 2 horas antes). Android: link
+    do Google Agenda + opção de baixar o .ics. Em "Meus agendamentos", link
+    "Adicionar à agenda" nos agendamentos futuros ativos. Arquivos novos:
+    `src/lib/calendario.js`, `src/components/LembreteAgenda.jsx`; alterados:
+    `Portal.jsx`, `Portal.css`, `dados.js` (`ENDERECO_BARBEARIA` = R. das Acácias, 19 -
+    Vale Encantado, Vila Velha - ES, 29113-759; vazio = sem endereço no
+    evento), README. Testado no emulador (iPhone 13 e Pixel 7, 16
+    verificações). Regras: sem mudança.
+39. **HML no celular (mesmo Wi-Fi).** `src/lib/firebase.js` passa a ligar no
+    emulador pelo mesmo endereço que abriu o site (localhost no PC, IP do
+    computador no celular); HML `firebase.json` com `host: 0.0.0.0`;
+    `iniciar-site.bat` com `npm run dev -- --host`. Passo a passo em
+    `stevon\AMBIENTES.md`. Só afeta o modo emulador; PRD inalterada.
+    Regras: sem mudança.
 
 ---
 
@@ -367,3 +396,17 @@ poucas horas de trabalho. Desvantagem: conferência manual.
 - Firebase — Cloud Functions (Blaze e cota grátis): https://firebase.google.com/docs/functions/faq-and-troubleshooting
 - Firebase — preços do Firestore: https://firebase.google.com/docs/firestore/pricing
 - Vercel — plano Hobby: https://vercel.com/docs/plans/hobby
+40. **Atalho da equipe na tela inicial (iPhone).** O atalho criado em /staff
+    abria em / porque o manifesto tinha `start_url: "/"`. Novo
+    `public/staff.webmanifest` (nome "Mageschi Equipe", abre em /staff);
+    `index.html` e `App.jsx` (ManifestoPorArea) trocam o manifesto nas telas
+    da equipe; `LoginStaff.jsx` manda direto para /painel quem já está logado
+    como equipe. Testado no emulador. Regras: sem mudança. O atalho antigo
+    precisa ser apagado e criado de novo depois de publicar.
+41. **Encaixe logo após cada atendimento.** `horariosLivres` (agendamentos.js)
+    passa a oferecer, além da grade normal (de "duração em duração" desde a
+    abertura), o horário em que cada atendimento ativo termina. Ex.: Corte
+    8:30-9:00 → Corte + Barba já pode às 9:00 (antes só 9:20). Vale para o
+    cliente e para "Agendar cliente" da equipe. Cancelados/recusados não
+    geram encaixe. Grade de 30 em 30 para todos: não aplicada (Victor
+    escolheu só o encaixe). Testado no emulador. Regras: sem mudança.

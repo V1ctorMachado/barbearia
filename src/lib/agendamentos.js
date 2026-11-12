@@ -293,8 +293,9 @@ async function ocupacoesDoDia(barbeiroId, dataDate) {
 // ── Cálculo de horários livres ───────────────────────────────
 // Usa os PERÍODOS de funcionamento do dia da semana (manhã e tarde,
 // com intervalo de almoço nos dias de semana). Em cada período, fatia
-// em blocos do tamanho do serviço e remove os que colidem com
-// agendamentos existentes. Devolve só os horários vagos.
+// em blocos do tamanho do serviço, acrescenta o horário logo após cada
+// atendimento (encaixe) e remove os que colidem com agendamentos
+// existentes. Devolve só os horários vagos, em ordem.
 export async function horariosLivres(barbeiroId, servicoId, data) {
   const servico = servicoPorId(servicoId);
   if (!servico) return [];
@@ -332,12 +333,24 @@ export async function horariosLivres(barbeiroId, servicoId, data) {
     const abertura = new Date(diaBase.getTime() + p.abre * 60000);
     const ultimoInicio = new Date(diaBase.getTime() + p.fecha * 60000); // último início permitido
 
-    for (let ini = new Date(abertura); ini.getTime() <= ultimoInicio.getTime(); ini = new Date(ini.getTime() + duracao * 60000)) {
-      const fim = new Date(ini.getTime() + duracao * 60000);
+    // Candidatos: a grade normal (de "duração em duração" desde a abertura)…
+    const candidatos = new Set();
+    for (let t = abertura.getTime(); t <= ultimoInicio.getTime(); t += duracao * 60000) candidatos.add(t);
+    // …mais o ENCAIXE: o minuto em que cada atendimento termina, para não
+    // deixar o barbeiro parado (ex.: corte 8:30-9:00 libera 9:00 para um
+    // Corte + Barba, que na grade só teria 9:20).
+    for (const o of ocupados) {
+      const t = o.fim.getTime();
+      if (t >= abertura.getTime() && t <= ultimoInicio.getTime()) candidatos.add(t);
+    }
+
+    for (const t of [...candidatos].sort((x, y) => x - y)) {
+      const ini = new Date(t);
+      const fim = new Date(t + duracao * 60000);
       if (ini < agora) continue; // não oferece horário no passado
 
       const colide = ocupados.some((o) => ini < o.fim && o.inicio < fim);
-      if (!colide) livres.push(new Date(ini));
+      if (!colide) livres.push(ini);
     }
   }
   return livres;

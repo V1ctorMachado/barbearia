@@ -151,3 +151,7 @@ export function mensagemAvisoBarbearia(ag) {
 // Firebase para excluir a conta (ver FIREBASE.md). Separado do WhatsApp da
 // barbearia (que fica em Configurações e é usado no resto do site).
 export const WHATSAPP_SUPORTE = '27988582900';
+
+// ── Endereço (aparece no lembrete da agenda do cliente) ────────
+// Deixe '' para não mostrar endereço.
+export const ENDERECO_BARBEARIA = 'R. das Acácias, 19 - Vale Encantado, Vila Velha - ES, 29113-759';

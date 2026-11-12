@@ -1,5 +1,20 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+// Atalho na tela inicial do celular: nas telas da equipe o site usa um
+// manifesto que abre em /staff; nas do cliente, o que abre em /.
+const TITULO_CLIENTE = 'Barbearia Mageschi — Agendamentos';
+const ROTAS_EQUIPE = /^\/(staff|painel|faturamento|configuracoes)/;
+function ManifestoPorArea() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const equipe = ROTAS_EQUIPE.test(pathname);
+    const link = document.getElementById('manifest');
+    if (link) link.setAttribute('href', equipe ? '/staff.webmanifest' : '/site.webmanifest');
+    document.title = equipe ? 'Mageschi Equipe' : TITULO_CLIENTE;
+  }, [pathname]);
+  return null;
+}
 import { AuthProvider } from './context/AuthContext';
 import { RotaCliente, RotaStaff } from './components/Rotas';
 import Login from './pages/Login';
@@ -37,6 +52,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ManifestoPorArea />
         <Suspense fallback={<div className="carregando-tela">Carregando…</div>}>
         <Routes>
           {/* Área do cliente */}

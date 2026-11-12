@@ -7,6 +7,8 @@ import { SERVICOS, STATUS_LABEL, servicoPorId, abreNoDia, mensagemAvisoBarbearia
 import { criarAgendamento, listarPorCliente, horariosLivres, atualizarStatus, marcarAvisoEnviado } from '../lib/agendamentos';
 import { hojeISO, ehDataPassada } from '../lib/datas';
 import { lerConfig, dataBloqueada, linkWhatsApp, linkWhatsAppApp, ehCelular } from '../lib/config';
+import { diasAte, DIAS_PARA_LEMBRETE } from '../lib/calendario';
+import LembreteAgenda from '../components/LembreteAgenda';
 import { ehEmailDeCelular, celularDoEmail, formatarCelular, identificacao } from '../lib/celular';
 import BotaoWhatsApp from '../components/BotaoWhatsApp';
 import './Portal.css';
@@ -163,7 +165,7 @@ export default function Portal() {
       const agNovo = {
         id: novo.id, status: 'pendente',
         clienteNome: clienteNome || '', clienteEmail: ehEmailDeCelular(usuario.email) ? '' : usuario.email,
-        servicoNome: servico?.nome, preco: servico?.preco, dataHora: horarioSel,
+        servicoNome: servico?.nome, preco: servico?.preco, duracaoMin: servico?.duracaoMin, dataHora: horarioSel,
       };
       setUltimo(agNovo);
       // Leva para o WhatsApp da barbearia com o aviso pronto.
@@ -275,6 +277,13 @@ export default function Portal() {
                   )}
                 </>
               )}
+              {/* Lembrete na agenda: destaque quando faltam 3 dias ou mais */}
+              {ultimo && diasAte(ultimo.dataHora) >= DIAS_PARA_LEMBRETE && (
+                <div className="lembrete-destaque">
+                  <p>Seu horário é daqui a <strong>{diasAte(ultimo.dataHora)} dias</strong>. Para não esquecer, adicione um lembrete:</p>
+                  <LembreteAgenda ag={ultimo} />
+                </div>
+              )}
             </div>
           )}
           {erro && <div className="alerta">{erro}</div>}
@@ -367,6 +376,9 @@ export default function Portal() {
                   )}
                   <span className="meu-data">{fmtDataHora(ag.dataHora)}</span>
                   <strong>{ag.servicoNome}</strong>
+                  {['pendente', 'agendado', 'confirmado'].includes(ag.status) && ag.dataHora > new Date() && (
+                    <LembreteAgenda ag={ag} compacto />
+                  )}
                 </div>
                 <div className="meu-lado">
                   <span className="meu-status">{STATUS_LABEL[ag.status]}</span>

@@ -186,3 +186,22 @@
   top: .5rem;
   right: 0;
 }
+
+/* Lembrete na agenda do celular */
+.lembrete-destaque {
+  margin-top: .9rem; padding-top: .8rem; border-top: 1px dashed var(--brass-dim);
+}
+.lembrete-destaque p { margin: 0 0 .55rem; color: var(--cream); }
+.agenda-opcoes { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
+.btn-agenda {
+  display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
+  background: transparent; color: var(--brass); border: 1px solid var(--brass); border-radius: 8px;
+  padding: .7rem 1rem; font: inherit; font-weight: 700; font-size: .95rem; cursor: pointer; text-decoration: none;
+}
+.btn-agenda:hover { background: rgba(212, 175, 55, .08); text-decoration: none; }
+.link-agenda {
+  background: none; border: 0; padding: 0; font: inherit; font-size: .82rem; cursor: pointer;
+  color: var(--brass); text-decoration: underline; text-underline-offset: 2px; align-self: flex-start;
+}
+.link-agenda-ics { align-self: center; color: var(--muted); font-size: .78rem; }
+.agenda-compacto { display: inline; }

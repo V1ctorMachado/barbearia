@@ -25,6 +25,8 @@ celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
    - o horário de funcionamento;
    - o intervalo de almoço;
    - a duração do serviço, para não encavalar com outro cliente;
+   - **encaixe:** o horário em que cada atendimento termina também aparece,
+     para o barbeiro não ficar parado entre um cliente e outro;
    - os dias bloqueados pela barbearia (feriados, folgas).
 4. **Escolhe o horário** e toca em **Confirmar agendamento**.
 5. O pedido entra como **"Aguardando confirmação"** até a barbearia aprovar.
@@ -39,8 +41,21 @@ funciona **uma vez só** por agendamento; depois aparece **"✅ Aviso enviado!"*
 Se duas pessoas tentarem o mesmo horário ao mesmo tempo, **só uma consegue**.
 A outra recebe um aviso e escolhe outro horário.
 
+### Lembrete na agenda do celular
+Se o horário for **daqui a 3 dias ou mais**, a tela de confirmação mostra
+"Seu horário é daqui a X dias" e o botão **📅 Adicionar à agenda**:
+- **iPhone:** abre o Calendário com o evento pronto e **aviso no dia, 1 hora
+  antes** do horário (agendado às 11h, aviso às 10h).
+- **Android:** abre o **Google Agenda** com o evento pronto (e a opção de
+  baixar o evento para outro app de agenda).
+
+O evento tem o serviço, o valor, a duração, o **endereço** da barbearia e o pedido de chegar com
+antecedência. O site não consegue criar o evento sozinho: o cliente só toca no
+botão e salva.
+
 ### Meus agendamentos
 - Lista dos agendamentos do cliente, com a situação de cada um.
+- **📅 Adicionar à agenda** em cada agendamento futuro ativo.
 - **Cancelar** um agendamento ativo, com confirmação antes.
 - **💬 Avisar** a barbearia no WhatsApp, em pedidos ainda aguardando confirmação.
 - O histórico fica guardado, inclusive os cancelados.
@@ -54,6 +69,8 @@ A outra recebe um aviso e escolhe outro horário.
 ## Para a equipe (painel)
 
 Acesso por um login separado, **só para quem é da equipe**.
+O atalho criado na tela inicial do celular a partir de `/staff` abre direto no
+painel (aparece como **Mageschi Equipe**).
 
 ### Agenda
 - Mostra os **próximos agendamentos** (de hoje em diante), de 50 em 50, com o

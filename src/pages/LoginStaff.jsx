@@ -28,6 +28,11 @@ export default function LoginStaff() {
     }
   }, [tentouEntrar, carregando, usuario, ehStaff, semConexao, navigate]);
 
+  // Já está logado como equipe (ex.: abriu pelo atalho da tela inicial) → painel.
+  useEffect(() => {
+    if (!carregando && usuario && ehStaff) navigate('/painel', { replace: true });
+  }, [carregando, usuario, ehStaff, navigate]);
+
   async function enviar(e) {
     e.preventDefault();
     setErro('');
