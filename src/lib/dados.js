@@ -8,7 +8,7 @@ export const SERVICOS = [
   // Mudou aqui? Mude lá e publique as regras (ver FIREBASE.md).
   { id: 'corte',              nome: 'Corte',               preco: 35,  duracaoMin: 30, descricao: 'Corte de cabelo' },
   { id: 'barba',              nome: 'Barba',               preco: 30,  duracaoMin: 20, descricao: 'Aparar e modelar a barba' },
-  { id: 'corte-barba',        nome: 'Corte + Barba',       preco: 65,  duracaoMin: 50, descricao: 'Corte de cabelo e barba' },
+  { id: 'corte-barba',        nome: 'Corte + Barba',       preco: 65,  duracaoMin: 60, descricao: 'Corte de cabelo e barba' },
   { id: 'pezinho',            nome: 'Pezinho',             preco: 10,  duracaoMin: 10, descricao: 'Acabamento do pezinho' },
   { id: 'pigmentacao-avulsa', nome: 'Pigmentação',         preco: 25,  duracaoMin: 20, descricao: 'Pigmentação (sem corte)' },
   { id: 'pigmentacao',        nome: 'Corte + Pigmentação', preco: 60,  duracaoMin: 50, descricao: 'Corte com pigmentação' },

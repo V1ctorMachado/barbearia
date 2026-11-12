@@ -1,0 +1,161 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funções auxiliares ────────────────────────────────────
+    function logado() {
+      return request.auth != null;
+    }
+
+    function ehStaff() {
+      return logado()
+        && exists(/databases/$(database)/documents/roles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.staff == true;
+    }
+
+    // Tabela oficial de serviços. PRECISA bater com src/lib/dados.js.
+    // Impede o cliente de gravar preço ou duração falsos.
+    function servicos() {
+      return {
+        'corte':              { 'preco': 35,  'duracaoMin': 30 },
+        'barba':              { 'preco': 30,  'duracaoMin': 20 },
+        'corte-barba':        { 'preco': 65,  'duracaoMin': 60 },
+        'pezinho':            { 'preco': 10,  'duracaoMin': 10 },
+        'pigmentacao-avulsa': { 'preco': 25,  'duracaoMin': 20 },
+        'pigmentacao':        { 'preco': 60,  'duracaoMin': 50 },
+        'luzes':              { 'preco': 100, 'duracaoMin': 90 },
+        'descoloracao':       { 'preco': 130, 'duracaoMin': 90 }
+      };
+    }
+
+    function barbeiros() {
+      return ['stevon'];
+    }
+
+    // Status que ainda ocupam o horário / que liberam o horário.
+    function ativo(d)    { return d.status in ['pendente', 'agendado', 'confirmado']; }
+    function liberado(d) { return d.status in ['cancelado', 'recusado']; }
+
+    // Na atualização, só o campo "status" pode mudar.
+    function soMudouStatus() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+    }
+
+    // Um pedido novo válido: em nome do próprio cliente, pendente,
+    // serviço/preço/duração oficiais, barbeiro válido e data futura.
+    function pedidoValido(d) {
+      return d.clienteUid == request.auth.uid
+        && d.status == 'pendente'
+        && d.barbeiroId in barbeiros()
+        && d.servicoId in servicos()
+        && d.preco == servicos()[d.servicoId].preco
+        && d.duracaoMin == servicos()[d.servicoId].duracaoMin
+        && d.dataHora is timestamp
+        && d.dataHora > request.time;
+    }
+
+    // ── Gaveta PRIVADA: dados completos do agendamento ────────
+    // Cada pedido tem ID próprio (automático) e nunca é sobrescrito,
+    // o que preserva o histórico de cada cliente.
+    match /agendamentos/{id} {
+      // Ler: só o dono ou a equipe.
+      allow read: if logado()
+        && (resource.data.clienteUid == request.auth.uid || ehStaff());
+
+      // Criar: pedido válido E a ocupação do horário, na mesma gravação,
+      // precisa apontar para este pedido.
+      // Equipe pode agendar para cliente de balcão/WhatsApp (sem conta).
+      allow create: if ehStaff()
+        || ( logado()
+          && pedidoValido(request.resource.data)
+          && request.resource.data.ocupacaoId is string
+          && existsAfter(/databases/$(database)/documents/ocupacoes/$(request.resource.data.ocupacaoId))
+          && getAfter(/databases/$(database)/documents/ocupacoes/$(request.resource.data.ocupacaoId)).data.agendamentoId == id );
+
+      allow update: if ehStaff()
+        // Dono cancelando um pedido ainda ativo (só muda o status).
+        || ( logado()
+          && resource.data.clienteUid == request.auth.uid
+          && ativo(resource.data)
+          && request.resource.data.status == 'cancelado'
+          && soMudouStatus() )
+        // Dono marcando "aviso enviado" no WhatsApp: só uma vez, só em
+        // pedido pendente e sem mexer em mais nada.
+        || ( logado()
+          && resource.data.clienteUid == request.auth.uid
+          && resource.data.status == 'pendente'
+          && resource.data.get('avisoEnviado', false) == false
+          && request.resource.data.avisoEnviado == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avisoEnviado']) );
+
+      allow delete: if ehStaff();
+    }
+
+    // ── Gaveta PÚBLICA: só horário/duração/status ─────────────
+    // ID fixo por horário (barbeiro_data_hora): impede agendamento duplo.
+    // "agendamentoId" diz qual pedido ocupa o horário no momento.
+    match /ocupacoes/{id} {
+      // O pedido apontado precisa existir na mesma gravação, ser do
+      // próprio cliente e ter os mesmos dados. Impede ocupações
+      // "fantasmas" que travariam a agenda.
+      function espelhaPedido() {
+        let novo = request.resource.data;
+        let priv = getAfter(/databases/$(database)/documents/agendamentos/$(novo.agendamentoId)).data;
+        return novo.agendamentoId is string
+          && priv.clienteUid == request.auth.uid
+          && priv.status == 'pendente'
+          && priv.ocupacaoId == id
+          && novo.status == 'pendente'
+          && novo.barbeiroId == priv.barbeiroId
+          && novo.dataHora == priv.dataHora
+          && novo.duracaoMin == priv.duracaoMin
+          && novo.keys().hasOnly(['barbeiroId', 'dataHora', 'duracaoMin', 'status', 'agendamentoId']);
+      }
+
+      // Dono do pedido que ocupa o horário hoje.
+      // (Ocupações antigas não têm agendamentoId: usavam o mesmo id.)
+      function donoAtual() {
+        return get(/databases/$(database)/documents/agendamentos/$(resource.data.get('agendamentoId', id))).data.clienteUid;
+      }
+
+      // Ler: qualquer logado (sem dado pessoal aqui).
+      allow read: if logado();
+
+      allow create: if ehStaff() || (logado() && espelhaPedido());
+
+      allow update: if ehStaff()
+        // Dono cancelando o próprio horário.
+        || ( logado()
+          && ativo(resource.data)
+          && request.resource.data.status == 'cancelado'
+          && soMudouStatus()
+          && donoAtual() == request.auth.uid )
+        // Reservar um horário que foi cancelado/recusado.
+        || ( logado()
+          && liberado(resource.data)
+          && espelhaPedido() );
+
+      allow delete: if ehStaff();
+    }
+
+    // ── Perfis de cliente ─────────────────────────────────────
+    match /clientes/{uid} {
+      allow read: if logado() && (uid == request.auth.uid || ehStaff());
+      allow create, update: if logado() && uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ── Configurações da barbearia (WhatsApp, aviso, bloqueios) ─
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if ehStaff();
+    }
+
+    // ── Marcação de equipe ────────────────────────────────────
+    match /roles/{uid} {
+      allow read: if logado() && uid == request.auth.uid;
+      allow write: if false;
+    }
+  }
+}

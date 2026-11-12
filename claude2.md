@@ -410,3 +410,7 @@ poucas horas de trabalho. Desvantagem: conferência manual.
     cliente e para "Agendar cliente" da equipe. Cancelados/recusados não
     geram encaixe. Grade de 30 em 30 para todos: não aplicada (Victor
     escolheu só o encaixe). Testado no emulador. Regras: sem mudança.
+42. **Corte + Barba: 60 min** (antes 50). `dados.js` e **`firestore.rules`
+    (REGRAS MUDARAM: publicar junto com o site)**, README e FIREBASE.md.
+    Agendamentos já feitos continuam com 50 min. Testado no emulador
+    (regras aceitam 60 e recusam 50).

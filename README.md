@@ -136,7 +136,7 @@ Tela **📊 Faturamento**, aberta pelo botão no topo do painel, com visão por
 |---|---|---|
 | Corte | R$ 35 | 30 min |
 | Barba | R$ 30 | 20 min |
-| Corte + Barba | R$ 65 | 50 min |
+| Corte + Barba | R$ 65 | 60 min |
 | Pezinho | R$ 10 | 10 min |
 | Pigmentação | R$ 25 | 20 min |
 | Corte + Pigmentação | R$ 60 | 50 min |
