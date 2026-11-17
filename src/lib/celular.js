@@ -58,3 +58,16 @@ export function identificacao(usuario, nome) {
   if (!usuario) return '';
   return ehEmailDeCelular(usuario.email) ? formatarCelular(celularDoEmail(usuario.email)) : usuario.email;
 }
+
+// ── Entrada sem senha ─────────────────────────────────────────
+// O cliente entra só com nome + celular. Por baixo, o Firebase ainda exige
+// uma senha: ela é gerada a partir do número (o cliente nunca vê).
+// ATENÇÃO: quem souber o número de alguém consegue entrar como ele
+// (decisão do Victor, 17/11/2026). O nome é conferido só na tela.
+export const senhaDoCelular = (cel) => `mageschi-${normalizarCelular(cel)}`;
+
+// Compara nomes sem acento, maiúscula ou tratamento (Seu, Dona…).
+export const mesmoNome = (a, b, primeiro) => {
+  const n = (t) => (primeiro(t) || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return n(a) !== '' && n(a) === n(b);
+};

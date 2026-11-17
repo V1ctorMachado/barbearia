@@ -18,7 +18,6 @@ function ManifestoPorArea() {
 import { AuthProvider } from './context/AuthContext';
 import { RotaCliente, RotaStaff } from './components/Rotas';
 import Login from './pages/Login';
-import Cadastro from './pages/Cadastro';
 import Portal from './pages/Portal';
 
 // O CSS das telas da equipe continua carregando junto com o resto, NA MESMA
@@ -57,7 +56,7 @@ export default function App() {
         <Routes>
           {/* Área do cliente */}
           <Route path="/login" element={<Login />} />
-          <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/cadastro" element={<Navigate to="/login" replace />} />
           <Route path="/" element={<RotaCliente><Portal /></RotaCliente>} />
 
           {/* Painel da equipe */}

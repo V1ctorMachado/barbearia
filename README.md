@@ -10,13 +10,17 @@ celular, e a barbearia aprova, acompanha e organiza a agenda em um painel.
 
 ## Para o cliente
 
-### Criar conta e entrar
-- Cadastro só com **nome, celular (WhatsApp) e senha**, sem e-mail.
-- Para entrar, basta o **celular e a senha**. O número pode ser digitado de
-  qualquer jeito: com ou sem +55, parênteses ou traço.
-- O login fica salvo no aparelho, então não é preciso entrar toda vez.
-- Esqueceu a senha? O link no login abre o WhatsApp do **suporte**, com a
-  mensagem pronta.
+### Entrar (sem senha)
+- Só **nome e celular (WhatsApp)**. Sem senha e sem e-mail.
+- **Primeira vez:** a conta é criada na hora.
+- **Próximas vezes:** o mesmo nome e celular. O **primeiro nome** precisa
+  conferir com o cadastro (sem diferença de maiúscula ou acento).
+- **Quem se cadastrou antes com senha:** digita a senha **uma única vez**; dali
+  em diante entra sem senha. Esqueceu? Link para o WhatsApp do **suporte**.
+- O número pode ser digitado de qualquer jeito: com ou sem +55, parênteses ou
+  traço. O login fica salvo no aparelho.
+- **Atenção:** sem senha, quem souber o nome e o celular de um cliente
+  consegue entrar como ele (decisão consciente, para facilitar o acesso).
 
 ### Agendar um horário
 1. **Escolhe o serviço**, com o preço e a duração de cada um.
@@ -135,8 +139,9 @@ Tela **📊 Faturamento**, aberta pelo botão no topo do painel, com visão por
 | Serviço | Preço | Duração |
 |---|---|---|
 | Corte | R$ 35 | 30 min |
-| Barba | R$ 30 | 20 min |
+| Barba | R$ 30 | 30 min |
 | Corte + Barba | R$ 65 | 60 min |
+| Corte + Sobrancelha | R$ 40 | 40 min |
 | Pezinho | R$ 10 | 10 min |
 | Pigmentação | R$ 25 | 20 min |
 | Corte + Pigmentação | R$ 60 | 50 min |
@@ -195,8 +200,7 @@ Aguardando confirmação ──► Agendado ──► Confirmado ──► Concl
 
 | Quem | Endereço | O que é |
 |---|---|---|
-| Cliente | `/cadastro` | Criar conta |
-| Cliente | `/login` | Entrar |
+| Cliente | `/login` | Entrar ou criar conta (nome e celular) |
 | Cliente | `/` | Agendar e ver "Meus agendamentos" |
 | Equipe | `/staff` | Login da equipe |
 | Equipe | `/painel` | Agenda e ações |

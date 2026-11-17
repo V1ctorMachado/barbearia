@@ -7,8 +7,9 @@ export const SERVICOS = [
   // ATENÇÃO: preço e duração também ficam em servicos() no firestore.rules.
   // Mudou aqui? Mude lá e publique as regras (ver FIREBASE.md).
   { id: 'corte',              nome: 'Corte',               preco: 35,  duracaoMin: 30, descricao: 'Corte de cabelo' },
-  { id: 'barba',              nome: 'Barba',               preco: 30,  duracaoMin: 20, descricao: 'Aparar e modelar a barba' },
+  { id: 'barba',              nome: 'Barba',               preco: 30,  duracaoMin: 30, descricao: 'Aparar e modelar a barba' },
   { id: 'corte-barba',        nome: 'Corte + Barba',       preco: 65,  duracaoMin: 60, descricao: 'Corte de cabelo e barba' },
+  { id: 'corte-sobrancelha',  nome: 'Corte + Sobrancelha', preco: 40,  duracaoMin: 40, descricao: 'Corte de cabelo e sobrancelha' },
   { id: 'pezinho',            nome: 'Pezinho',             preco: 10,  duracaoMin: 10, descricao: 'Acabamento do pezinho' },
   { id: 'pigmentacao-avulsa', nome: 'Pigmentação',         preco: 25,  duracaoMin: 20, descricao: 'Pigmentação (sem corte)' },
   { id: 'pigmentacao',        nome: 'Corte + Pigmentação', preco: 60,  duracaoMin: 50, descricao: 'Corte com pigmentação' },
@@ -102,12 +103,16 @@ export const MENSAGEM_CONFIRMACAO = [
   'Até lá!',
 ].join('\n');
 
+// Primeiro nome; se começar com tratamento (Seu, Dona, Dr…), usa o nome seguinte.
+export function primeiroNomeDe(nome) {
+  const partes = (nome || '').trim().split(/\s+/).filter(Boolean);
+  const tratamento = /^(seu|sr\.?|sra\.?|dona|dr\.?|dra\.?|tio|tia)$/i;
+  return (partes.length > 1 && tratamento.test(partes[0]) ? partes[1] : partes[0]) || '';
+}
+
 export function mensagemConfirmacao(ag) {
   const d = ag.dataHora;
-  // Primeiro nome; se começar com tratamento (Seu, Dona, Dr…), usa o nome seguinte.
-  const partes = (ag.clienteNome || '').trim().split(/\s+/).filter(Boolean);
-  const tratamento = /^(seu|sr\.?|sra\.?|dona|dr\.?|dra\.?|tio|tia)$/i;
-  const primeiroNome = (partes.length > 1 && tratamento.test(partes[0]) ? partes[1] : partes[0]) || 'tudo bem';
+  const primeiroNome = primeiroNomeDe(ag.clienteNome) || 'tudo bem';
   const valores = {
     nome: primeiroNome,
     servico: ag.servicoNome || 'seu serviço',

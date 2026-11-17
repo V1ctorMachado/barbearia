@@ -414,3 +414,22 @@ poucas horas de trabalho. Desvantagem: conferência manual.
     (REGRAS MUDARAM: publicar junto com o site)**, README e FIREBASE.md.
     Agendamentos já feitos continuam com 50 min. Testado no emulador
     (regras aceitam 60 e recusam 50).
+
+### 17/11/2026
+
+43. **Entrada sem senha (nome + celular)**, decisão do Victor ciente do risco
+    (quem souber o número entra como o cliente). Senha interna gerada do
+    número (`senhaDoCelular`); número novo cria a conta na hora; primeiro
+    nome confere com o cadastro (sem acento/maiúscula/tratamento); contas
+    antigas digitam a senha uma vez e passam a entrar sem senha (com link do
+    suporte se esqueceram). `/cadastro` redireciona para `/login`;
+    `Cadastro.jsx` removido. Arquivos: `Login.jsx`, `celular.js`, `dados.js`
+    (`primeiroNomeDe`), `App.jsx`, README, FIREBASE.md.
+44. **Novo serviço Corte + Sobrancelha: R$ 40 / 40 min** (duração assumida,
+    a confirmar). `dados.js` e **`firestore.rules` (REGRAS MUDARAM)**.
+    Testado no emulador (14 verificações, itens 43 e 44). Em HML, aguardando
+    aprovação para PRD.
+45. **Barba: 30 min** (antes 20). `dados.js` e **`firestore.rules` (REGRAS
+    MUDARAM)**, README e FIREBASE.md. Agendamentos já feitos continuam com
+    20 min. Testado no emulador (regras aceitam 30 e recusam 20).
+

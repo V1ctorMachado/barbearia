@@ -19,8 +19,9 @@ service cloud.firestore {
     function servicos() {
       return {
         'corte':              { 'preco': 35,  'duracaoMin': 30 },
-        'barba':              { 'preco': 30,  'duracaoMin': 20 },
+        'barba':              { 'preco': 30,  'duracaoMin': 30 },
         'corte-barba':        { 'preco': 65,  'duracaoMin': 60 },
+        'corte-sobrancelha':  { 'preco': 40,  'duracaoMin': 40 },
         'pezinho':            { 'preco': 10,  'duracaoMin': 10 },
         'pigmentacao-avulsa': { 'preco': 25,  'duracaoMin': 20 },
         'pigmentacao':        { 'preco': 60,  'duracaoMin': 50 },

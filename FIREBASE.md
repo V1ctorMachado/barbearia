@@ -25,8 +25,9 @@ Arquivos relacionados:
 | ID | Nome | Preço | Duração |
 |---|---|---|---|
 | `corte` | Corte | R$ 35 | 30 min |
-| `barba` | Barba | R$ 30 | 20 min |
+| `barba` | Barba | R$ 30 | 30 min |
 | `corte-barba` | Corte + Barba | R$ 65 | 60 min |
+| `corte-sobrancelha` | Corte + Sobrancelha | R$ 40 | 40 min |
 | `pezinho` | Pezinho | R$ 10 | 10 min |
 | `pigmentacao-avulsa` | Pigmentação | R$ 25 | 20 min |
 | `pigmentacao` | Corte + Pigmentação | R$ 60 | 50 min |
@@ -304,3 +305,22 @@ mexer nos dados reais.
 - Equipe pode criar agendamento/ocupação (botão "+ Agendar cliente").
   **Exige publicar as regras e o site juntos.** Testado: 3 cenários novos +
   14 + 6 anteriores.
+
+## Entrada sem senha (17/11/2026)
+
+O cliente entra só com **nome + celular**. O Firebase continua com o login
+"e-mail e senha", mas os dois são gerados pelo site a partir do número:
+- e-mail interno: `<número>@cliente.mageschi.app`;
+- senha interna: `mageschi-<número>` (`senhaDoCelular` em `src/lib/celular.js`).
+
+Fluxo (`src/pages/Login.jsx`): tenta entrar com a senha interna → se não
+existe, cria a conta e o documento `clientes/{uid}` → se o número já tinha
+conta com senha própria (cadastro antigo), pede essa senha uma vez e troca
+pela interna (`updatePassword`). Depois de entrar, confere o primeiro nome com
+`clientes/{uid}.nome`; se não conferir, sai da conta.
+
+**Segurança:** a senha interna é previsível. Quem souber o número de um
+cliente consegue entrar como ele (ver e cancelar os agendamentos dele). A
+conferência do nome é só na tela. As regras do Firestore continuam
+protegendo os dados de um cliente contra os outros e as ações da equipe.
+
