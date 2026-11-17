@@ -27,10 +27,10 @@ Arquivos relacionados:
 | `corte` | Corte | R$ 35 | 30 min |
 | `barba` | Barba | R$ 30 | 30 min |
 | `corte-barba` | Corte + Barba | R$ 65 | 60 min |
-| `corte-sobrancelha` | Corte + Sobrancelha | R$ 40 | 40 min |
+| `corte-sobrancelha` | Corte + Sobrancelha | R$ 40 | 30 min |
 | `pezinho` | Pezinho | R$ 10 | 10 min |
-| `pigmentacao-avulsa` | Pigmentação | R$ 25 | 20 min |
-| `pigmentacao` | Corte + Pigmentação | R$ 60 | 50 min |
+| `pigmentacao-avulsa` | Pigmentação | R$ 25 | 30 min |
+| `pigmentacao` | Corte + Pigmentação | R$ 60 | 60 min |
 | `luzes` | Luzes | R$ 100 | 90 min |
 | `descoloracao` | Descoloração | R$ 130 | 90 min |
 

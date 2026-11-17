@@ -33,7 +33,7 @@ Detalhes técnicos do banco e das regras: ver `FIREBASE.md`.
 - [ ] Conta de teste `123@hotmail.com` (usa o número do Stevon) ficou de fora;
       excluir quando quiser.
 - [ ] Trocar `PERMITIR_EXCLUIR` para `false` antes de abrir para clientes.
-- [ ] Confirmar duração da **Pigmentação avulsa** (hoje 20 min).
+- [x] ~~Confirmar duração da Pigmentação avulsa~~ — 30 min (17/11).
 - [ ] Se fechar pagamento único: migrar hospedagem para **Firebase Hosting**
       (Vercel Hobby não permite uso comercial; Pro custa US$ 20/mês).
 - [ ] Decidir sobre a **grade de horários** (hoje avança pela duração do serviço;
@@ -432,4 +432,12 @@ poucas horas de trabalho. Desvantagem: conferência manual.
 45. **Barba: 30 min** (antes 20). `dados.js` e **`firestore.rules` (REGRAS
     MUDARAM)**, README e FIREBASE.md. Agendamentos já feitos continuam com
     20 min. Testado no emulador (regras aceitam 30 e recusam 20).
+46. **Pigmentação (avulsa): 30 min** (antes 20). `dados.js` e
+    **`firestore.rules` (REGRAS MUDARAM)**, README e FIREBASE.md. Testado no emulador (aceita 30, recusa 20).
+47. **Corte + Pigmentação: 60 min** (antes 50). `dados.js` e
+    **`firestore.rules` (REGRAS MUDARAM)**, README e FIREBASE.md. Testado no
+    emulador (aceita 60, recusa 50).
+48. **Corte + Sobrancelha: 30 min** (confirmado pelo Victor; antes 40
+    assumido). `dados.js` e **`firestore.rules` (REGRAS MUDARAM)**, README e
+    FIREBASE.md. Testado no emulador (aceita 30, recusa 40).
 

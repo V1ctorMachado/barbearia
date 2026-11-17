@@ -21,10 +21,10 @@ service cloud.firestore {
         'corte':              { 'preco': 35,  'duracaoMin': 30 },
         'barba':              { 'preco': 30,  'duracaoMin': 30 },
         'corte-barba':        { 'preco': 65,  'duracaoMin': 60 },
-        'corte-sobrancelha':  { 'preco': 40,  'duracaoMin': 40 },
+        'corte-sobrancelha':  { 'preco': 40,  'duracaoMin': 30 },
         'pezinho':            { 'preco': 10,  'duracaoMin': 10 },
-        'pigmentacao-avulsa': { 'preco': 25,  'duracaoMin': 20 },
-        'pigmentacao':        { 'preco': 60,  'duracaoMin': 50 },
+        'pigmentacao-avulsa': { 'preco': 25,  'duracaoMin': 30 },
+        'pigmentacao':        { 'preco': 60,  'duracaoMin': 60 },
         'luzes':              { 'preco': 100, 'duracaoMin': 90 },
         'descoloracao':       { 'preco': 130, 'duracaoMin': 90 }
       };
